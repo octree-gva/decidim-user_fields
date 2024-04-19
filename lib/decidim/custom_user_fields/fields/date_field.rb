@@ -14,8 +14,8 @@ module Decidim
         def form_tag(form_tag)
           field_options = {}
           if options[:min].present? || options[:max].present?
-            field_options[:min] = options[:min]
-            field_options[:max] = options[:max]
+            field_options[:min] = options[:min] if options[:min].present?
+            field_options[:max] = options[:max] if options[:max].present?
           end
 
           content_tag(

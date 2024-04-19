@@ -1,0 +1,16 @@
+
+stages:
+  - publish
+
+publish_gem:
+  image: ruby
+  stage: publish
+  script:
+    - echo "---" > .credentials
+    - |
+      echo ":ci_rubygems_api_key: $GEM_HOST_API_KEY" >> .credentials
+    - chmod 0600 .credentials
+    - gem build decidim-user_fields.gemspec
+    - gem push decidim-user_fields-*.gem -k ci_rubygems_api_key --config-file .credentials
+  only:
+    - tags

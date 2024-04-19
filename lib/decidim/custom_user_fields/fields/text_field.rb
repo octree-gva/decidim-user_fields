@@ -13,8 +13,8 @@ module Decidim
 
         def form_tag(form_tag)
           content_tag(
-            :div, 
-            form_tag.text_field(name), 
+            :div,
+            form_tag.text_field(name),
             class: class_name
           )
         end

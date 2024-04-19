@@ -7,8 +7,8 @@ module Decidim
           form.validates(name, presence: required?)
           if options[:min].present? || options[:max].present?
             min_max_options = {}
-            min_max_options[:minimum] = options[:min].to_i
-            min_max_options[:maximum] = options[:max].to_i
+            min_max_options[:minimum] = options[:min].to_i if options[:min].present?
+            min_max_options[:maximum] = options[:max].to_i if options[:max].present?
             form.validates(name, length: min_max_options, allow_blank: !required?)
           end
         end

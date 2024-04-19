@@ -1,0 +1,3 @@
+<!-- replace "erb[loud]:contains('decidim_form_for')" -->
+<% form = @form || Decidim::RegistrationForm.from_model(resource).with_context(current_organization: current_organization, current_user: current_user) %>
+<%= decidim_form_for form, namespace: "invitation", as: resource_name, url: invitation_path(resource_name, invite_redirect: params[:invite_redirect]), html: { method: :put, class: "register-form new_user" } do |f| %>

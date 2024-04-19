@@ -1,0 +1,5 @@
+<div class="custom-user-fields__section">
+    <% Decidim::CustomUserFields.custom_fields.collect do |field|
+        concat field.form_tag(f)
+    end %>
+</div>

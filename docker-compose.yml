@@ -1,0 +1,37 @@
+version: '3'
+services:
+  decidim-user_fields:
+    entrypoint: "bin/docker-entrypoint"
+    command: bash -c "sleep infinity"
+    image: octree/decidim-dev:0.26
+    privileged: true
+    volumes:
+      - .:/home/decidim/module
+      - bundle:/home/decidim/app/vendor
+      - node_modules:/home/decidim/app/node_modules
+    environment:
+      - PORT=3000
+      - DATABASE_HOST=pg
+      - DATABASE_USERNAME=decidim
+      - DATABASE_PASSWORD=pleaseChangeMe
+      - DATABASE_URL=postgresql://decidim:pleaseChangeMe@user-fields-pg:5432/decidim
+      - DEV_MODULE=decidim-user_fields
+      - RAILS_ENV=development
+    ports:
+      - 3000:3000
+    links:
+      - user-fields-pg
+
+  user-fields-pg:
+    image: postgres:14
+    volumes:
+      - user_fields-pg-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DATABASE=decidim
+      - POSTGRES_USER=decidim
+      - POSTGRES_PASSWORD=pleaseChangeMe
+
+volumes:
+  node_modules: {}
+  bundle: {}
+  user_fields-pg-data: {}

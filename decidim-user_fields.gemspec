@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.authors = ['Hadrien Froger']
   s.email = ['hadrien@octree.ch']
   s.license = 'AGPL-3.0'
-  s.homepage = 'https://github.com/octree-gva/decidim-module-mkutano-extra_user_fields'
+  s.homepage = 'https://git.octree.ch/decidim/decidim-user_fields'
   s.required_ruby_version = '>= 2.7'
 
   s.name = 'decidim-user_fields'

@@ -17,7 +17,9 @@ module Decidim
 
       def map_model(model)
         extended_data = model.extended_data.with_indifferent_access
-        field_def.map_model(self, model)
+        Decidim::CustomUserFields.custom_fields.each do |field_def|
+          field_def.map_model(self, extended_data)
+        end
       end
     end
   end

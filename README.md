@@ -24,8 +24,7 @@
 
 
 # Decidim User Fields
-Add custom user fields through a configuration file and without migration. 
-This module aims to configure in a blast new fields for subscription and profile editing. It supports: 
+This Decidim module adds custom user fields through a configuration file and without migration. This module aims to configure in a blast new fields for subscription and profile editing. It supports: 
 
 - User registration
 - User profiles
@@ -35,9 +34,9 @@ This module aims to configure in a blast new fields for subscription and profile
 
 - Omniauth registrations
 
-## Set up the module
+## Install the module
 Add the gem to your Gemfile
-```
+```ruby
 gem "decidim-user_fields"
 ```
 
@@ -46,11 +45,11 @@ Run bundle
 bundle install
 ```
 
+## How to add a custom user field.
 Create an initializer `config/initializers/custom_user_fields.rb`
-```
+```ruby
 Decidim::CustomUserFields.configure do |config|
   config.add_field :birthdate, type: :date, required: true
-  config.add_field :province, type: :select, options: [:vd, :vs, :ar], default: :vd, required: true
   config.add_field :address, type: :textarea, required: false, rows: 10
   config.add_field :purpose, type: :text, required: false
 end
@@ -81,7 +80,7 @@ parameters:
 
 ### Labels
 Labels are translated and are under the translation scope `decidim.custom_user_fields`. 
-Example of a `fr.yml` file:
+Example of a `config/locales/fr.yml` file:
 
 ```yml
 fr:
@@ -101,14 +100,41 @@ fr:
           ar: "Aarau"
 ```
 
-## Run locally
+# Run locally
 To run this module locally, we use Docker-compose:
 
 ```bash
 docker-compose up
 ```
-This will run a decidim-user_fields container, which sleeps.
-You can run any command you want in the running container, like:
+This will run a decidim-user_fields container, which **sleeps and does nothing**.
+
+After your containers are mounted, you can seed the database: 
+```bash
+  docker-compose exec -it decidim-user_fields bin/rails db:seed
+```
+
+Then, you can start the server
+```bash
+  docker-compose exec -it decidim-user_fields bin/rails s -b 0.0.0.0
+```
+
+You can then open a bash session and edit the initializer, as described in the "How to add a custom user field" section. 
+```bash
+  docker-compose exec -it decidim-user_fields bash
+```
+
+Once something change, reset your server: 
+```bash
+  docker-compose exec -it decidim-user_fields bin/rails restart
+```
+While developing locally, you have two environment variables that can help you:
+
+* `ROOT`: the root of the application using the module
+* `MODULE_ROOT`: the place where your gem code is.
+
+
+
+### Usefull commands
 
 | Command                                                                                          | Description                                         |
 |--------------------------------------------------------------------------------------------------|-----------------------------------------------------|
@@ -118,6 +144,7 @@ You can run any command you want in the running container, like:
 | `docker-compose exec -it decidim-user_fields bundle exec rspec /home/decidim/module/spec`        | Run tests for the module                            |
 | `docker-compose exec -it decidim-user_fields bundle exec rubocop -a /home/decidim/module`        | Correct lint errors with RuboCop                    |
 | `docker-compose exec -it decidim-user_fields bash`                                               | Navigate your container in bash                     |
+
 
 
 

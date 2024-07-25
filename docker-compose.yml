@@ -1,10 +1,8 @@
-version: '3'
 services:
   decidim-user_fields:
-    entrypoint: "bin/docker-entrypoint"
     command: bash -c "sleep infinity"
-    image: octree/decidim-dev:0.26
-    privileged: true
+    image: octree/decidim-dev:0.27
+    entrypoint: ""
     volumes:
       - .:/home/decidim/module
       - bundle:/home/decidim/app/vendor

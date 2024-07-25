@@ -5,33 +5,87 @@ module Decidim
         extend Forwardable
         include ActionView::Helpers::TagHelper
 
-        def_delegators :@definition, :name, :type
+        def_delegators :@definition, :name, :type, :handler_name
 
-        attr_reader :definition, :options
+        attr_reader :definition
+        attr_accessor :options
         def initialize(definition, options)
           @definition = definition
           @options = options
+        end
+        def validate(_value, _data, _errors); end
+
+        def skip_hashing?
+          options[:skip_hashing].present?
+        end
+
+        def ui_options
+          options[:ui] || {}
         end
 
         def configure_form(_form)
           raise Error, "Configure Form is not implemented for #{definition.type} type"
         end
 
+        def configure_settings(settings)
+          raise Error, "Configure Settings is not implemented for #{definition.type} type"
+        end
+
         def map_model(_form, _model_data)
           raise Error, "Map Model is not implemented for #{definition.type} type"
         end
 
-        def form_tag(_form)
+        def form_tag(_form, _custom_label=nil)
           raise Error, "Form Tag is not implemented for #{definition.type} type"
         end
 
         def class_name
           class_specifier = name.to_s.underscore
-          "field field--#{type} field--#{class_specifier}"
+          [
+            "field",
+            class_modifer(type),
+            class_modifer(name.to_s.underscore)
+        ].join(" ")
         end
 
+        def class_modifer(modifier)
+          "field--#{modifier}"
+        end
+
+        def label_exists?(label, fallback: true)
+          handler_label = I18n.exists?(i18n_handler_label(label))
+          return handler_label unless fallback
+          fallback_label = I18n.exists?(i18n_fallback_label(label))
+          handler_label || fallback_label
+        end
+
+        def label(label, fallback: true)
+          puts i18n_handler_label(label)
+
+          I18n.t(
+              i18n_handler_label(label), 
+              default: fallback ? I18n.t(i18n_fallback_label(label)) : nil
+            )
+        end
+        
         def required?
           options[:required].present? && options[:required]
+        end
+
+        def i18n_context
+          @i18n_context ||= "decidim.custom_user_fields.#{handler_name}"
+        end
+
+        def i18n_context=(context)
+          @i18n_context=context
+        end
+
+        private
+        def i18n_handler_label(label)
+          "#{i18n_context}.#{name}.#{label}"
+        end
+        def i18n_fallback_label(label)
+          "decidim.custom_user_fields.#{type}.#{label}"
         end
       end
     end

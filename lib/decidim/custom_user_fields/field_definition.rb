@@ -7,14 +7,22 @@ module Decidim
 
       attr_reader :type,
                   :name,
-                  :field
+                  :field,
+                  :handler_name
 
       def_delegators :@field,
                      :configure_form,
                      :map_model,
-                     :form_tag
+                     :form_tag,
+                     :options,
+                     :options=,
+                     :i18n_context,
+                     :i18n_context=,
+                     :validate,
+                     :skip_hashing?
 
-      def initialize(name, kwargs)
+      def initialize(name, kwargs, handler_name)
+        @handler_name = handler_name
         @name = name.to_s.to_sym
         @type = kwargs[:type]
         # TODO: parse kwargs
@@ -25,6 +33,8 @@ module Decidim
           @field = Fields::TextAreaField.new(self, kwargs)
         when :date
           @field = Fields::DateField.new(self, kwargs)
+        when :extra_field_ref
+          @field = Fields::ExtraFieldRefField.new(self, kwargs)
         else
           raise Error, "field type #{type} is not supported"
         end

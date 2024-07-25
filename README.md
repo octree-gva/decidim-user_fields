@@ -22,7 +22,6 @@
     </a>
 </p>
 
-
 # Decidim User Fields
 This Decidim module adds custom user fields through a configuration file and without migration. This module aims to configure in a blast new fields for subscription and profile editing. It supports: 
 
@@ -33,6 +32,9 @@ This Decidim module adds custom user fields through a configuration file and wit
 ⚠️ It **does not support**:
 
 - Omniauth registrations
+
+> Are you on GitHub ? Please use the reference repository on [GitLab for issues and pull requests](https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-user_fields).
+
 
 ## Install the module
 Add the gem to your Gemfile
@@ -62,21 +64,39 @@ end
 
 parameters:
 * `required`: must choose a date
-* `min`: date in ISO8601 where the user cannot select before
-* `max`: date in ISO8601 where the user cannot select after
+* `not_before`: date in ISO8601 where the user cannot select before
+* `not_after`: date in ISO8601 where the user cannot select after
+* `skip_hashing`: Do not hash the field result (watch out privacy concerns)
 
 **`:textarea`**
 
 parameters:
 * `required`: if the field is required
-* `min`: minimal length
-* `max`: maximal length
-* `rows`: how many rows the field should display
+* `min`: minimal text length
+* `max`: maximal text length
+* `skip_hashing`: Do not hash the field result (watch out privacy concerns)
+* `ui.rows`: how many rows the field should display
 
 **`:text`**
 
 parameters:
 * `required`: if the field is required
+* `values_in`: restrict the values accepted for the field
+* `format`: a regex (like `format: /\A[A-z0-9]*\z/)
+* `skip_hashing`: Do not hash the field result (watch out privacy concerns)
+
+**`:extra_field_ref` (Authorization only)**
+> This field is a quiet special one, it allows workflows where
+> the extra_field on registration is optional, but get required on authorization.
+> Warning: this field can be use only in authorization configuration
+
+parameters:
+* `ref`: the extra_field reference name
+* `hide_if_value`: hide the extra field if there is already a value.
+* `skip_hashing`: Do not hash the field result (watch out privacy concerns)
+* `skip_update_on_verified`: Do not update the extra_field reference when verified
+* `...`: any other parameters to override the reference option
+
 
 ### Labels
 Labels are translated and are under the translation scope `decidim.custom_user_fields`. 
@@ -84,20 +104,69 @@ Example of a `config/locales/fr.yml` file:
 
 ```yml
 fr:
-  activemodel:
-    attributes:
-      user:
-        birthday: "Birthday"
-        address: "Address"
-        purpose: "Reason for Being Here"
-        province: "Canton"
   decidim:
+    authorization_handlers:
+      pb2024:
+        name: "Données de rescencement pour le Budget Participatif 2024"
+        explanation: "Donnée récoltée pour participer au BP 2024"
     custom_user_fields:
-      province:
-        options:
-          vd: "Vaud"
-          vs: "Valais"
-          ar: "Aarau"
+      extended_data:
+        first_name:
+          label: "Prénoms"
+        last_name:
+          label: "Nom de famille"
+      pb2024:
+        fields: 
+          birthdate:
+            label: "Date de naissance"
+            help_text: "La participation est réservée aux personnes de plus de 18ans"
+          postal_code:
+            label: "Code postal"
+            help_text: "La participation est réservée aux habitants de MaCommune.
+```
+
+# Create an authorization with custom fields
+
+```ruby
+# Fields added to the profile
+Decidim::CustomUserFields.configure do |config|
+  config.add_field :first_name, type: :text, required: false
+  config.add_field :last_name, type: :text, required: false
+end
+
+# Fields for the verification PB2024
+Rails.application.config.after_initialize  do
+  Decidim::CustomUserFields::Verifications.register("PB2024") do |config|
+    config.add_field :first_name, type: :extra_field_ref, required: true, skip_hashing: true, hide_if_value: true
+    config.add_field :last_name, type: :extra_field_ref, required: true, skip_hashing: true, hide_if_value: true
+    config.add_field :birthdate, type: :date, required: true, not_after: 18.years.ago.to_date.iso8601
+    config.add_field :postal_code, type: :text, required: true, format: /\A[\-0-9]*\z/, values_in: ["2000", "2001", "2002"]
+  end
+end
+
+```
+
+Then, add locales for this flow: 
+```yml
+fr:
+  decidim:
+    authorization_handlers:
+      pb2024:
+        name: "Participer au BP 2024"
+        explanation: "Valider votre compte"
+    custom_user_fields:
+      first_name:
+        label: Prénoms
+        help_text: Ce champs est requis pour participer aux budgets participatif.
+      last_name: 
+        label: Nom de famille
+      birthdate:
+        label: Date de naissance
+        bad_not_after: Seul les > 18 peuvent participer
+      postal_code:
+        label: Code postal
+        bad_values: Ce code postal est inconu dans  maCommune
+        help_text: Seul les communies prêt de maCommune peux être acceptée
 ```
 
 # Run locally

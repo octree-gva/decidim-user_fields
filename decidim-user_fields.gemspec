@@ -17,8 +17,9 @@ Gem::Specification.new do |s|
   s.description = 'Allows to collect and manage some extra user fields on registration and profile edition.'
 
   s.files = Dir['{app,config,lib}/**/*', 'LICENSE-AGPLv3.txt', 'Rakefile', 'README.md']
-
+  
   s.add_dependency 'decidim-core', Decidim::CustomUserFields.decidim_version
+  s.add_dependency 'decidim-verifications', Decidim::CustomUserFields.decidim_version
   s.add_dependency 'deface', '>= 1.8.1'
 
   s.add_development_dependency 'decidim-dev', Decidim::CustomUserFields.decidim_version

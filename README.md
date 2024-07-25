@@ -116,13 +116,12 @@ fr:
         last_name:
           label: "Nom de famille"
       pb2024:
-        fields: 
-          birthdate:
-            label: "Date de naissance"
-            help_text: "La participation est réservée aux personnes de plus de 18ans"
-          postal_code:
-            label: "Code postal"
-            help_text: "La participation est réservée aux habitants de MaCommune.
+        birthdate:
+          label: "Date de naissance"
+          help_text: "La participation est réservée aux personnes de plus de 18ans"
+        postal_code:
+          label: "Code postal"
+          help_text: "La participation est réservée aux habitants de MaCommune.
 ```
 
 # Create an authorization with custom fields
@@ -160,6 +159,7 @@ fr:
         help_text: Ce champs est requis pour participer aux budgets participatif.
       last_name: 
         label: Nom de famille
+    pb2024:
       birthdate:
         label: Date de naissance
         bad_not_after: Seul les > 18 peuvent participer

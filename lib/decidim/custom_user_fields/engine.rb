@@ -15,18 +15,18 @@ module Decidim
       initializer 'decidim_custom_user_fields.registration_additions' do
         config.to_prepare do
           Decidim::RegistrationForm.class_eval do
-            include CustomUserFields::FormsDefinition
+            include CustomUserFields::FormDefinition
             def self.require_password_on_accepting
               Decidim::User.require_password_on_accepting
             end
           end
 
           Decidim::OmniauthRegistrationForm.class_eval do
-            include CustomUserFields::FormsDefinition
+            include CustomUserFields::FormDefinition
           end
 
           Decidim::AccountForm.class_eval do
-            include CustomUserFields::FormsDefinition
+            include CustomUserFields::FormDefinition
           end
 
           Decidim::CreateRegistration.class_eval do

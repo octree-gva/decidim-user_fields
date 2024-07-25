@@ -5,7 +5,7 @@ require 'active_support/concern'
 module Decidim
   module CustomUserFields
     # Extra user fields definitions for forms
-    module FormsDefinition
+    module FormDefinition
       extend ActiveSupport::Concern
 
       included do |inst|

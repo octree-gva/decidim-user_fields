@@ -1,0 +1,4 @@
+<div class="custom-user-fields__section">
+    <%= form.hidden_field(:handler_name) %>
+    <% handler.fields.collect {|custom_field| concat custom_field.form_tag(form) } %>
+</div>

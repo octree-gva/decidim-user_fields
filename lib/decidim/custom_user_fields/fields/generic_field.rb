@@ -14,7 +14,9 @@ module Decidim
           @options = options
         end
         def validate(_value, _data, _errors); end
-
+        def sanitized_value(raw_value)
+          raw_value
+        end
         def skip_hashing?
           options[:skip_hashing].present?
         end

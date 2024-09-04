@@ -23,6 +23,10 @@ module Decidim
           form.validates(name, validations)
         end
 
+        def sanitized_value(value)
+          return value.strip if value.present? && !value.blank?
+          nil
+        end
 
         def map_model(form, data)
           form[name] = data[name] if data[name].present?

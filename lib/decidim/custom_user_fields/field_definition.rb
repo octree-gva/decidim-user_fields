@@ -19,7 +19,8 @@ module Decidim
                      :i18n_context,
                      :i18n_context=,
                      :validate,
-                     :skip_hashing?
+                     :skip_hashing?,
+                     :sanitized_value
 
       def initialize(name, kwargs, handler_name)
         @handler_name = handler_name

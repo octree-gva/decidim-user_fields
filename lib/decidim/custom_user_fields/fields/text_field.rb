@@ -21,9 +21,14 @@ module Decidim
         end
 
         def map_model(form, data)
-          form[name] = data[name] if data[name].present?
+          form[name] = data[name].strip if data[name].present?
         end
 
+        def sanitized_value(value)
+          return value.strip if value.present? && !value.blank?
+          nil
+        end
+        
         def form_tag(form_tag)
           content_tag(
             :div,

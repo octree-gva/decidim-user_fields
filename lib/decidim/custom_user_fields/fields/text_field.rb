@@ -27,7 +27,7 @@ module Decidim
         end
 
         def map_model(form, data)
-          form[name] = data[name] if data[name].present?
+          form[name] = data[name].strip if data[name].present?
         end
 
         def sanitized_value(value)

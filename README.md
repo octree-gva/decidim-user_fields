@@ -69,6 +69,7 @@ parameters:
 * `skip_hashing`: Do not hash the field result (watch out privacy concerns)
 
 **`:textarea`**
+a textarea field, which the content will be trimmed (no whitespaces before and after).
 
 parameters:
 * `required`: if the field is required
@@ -78,6 +79,7 @@ parameters:
 * `ui.rows`: how many rows the field should display
 
 **`:text`**
+a text field, which the content will be trimmed (no whitespaces before and after).
 
 parameters:
 * `required`: if the field is required

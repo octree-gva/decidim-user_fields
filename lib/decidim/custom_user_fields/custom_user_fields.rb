@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Decidim
   module CustomUserFields
     include ActiveSupport::Configurable
@@ -5,7 +7,7 @@ module Decidim
     def self.configure
       yield self
     end
-    
+
     ##
     # If users should receive emails on notification
     # by default

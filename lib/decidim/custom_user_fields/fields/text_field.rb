@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Decidim
   module CustomUserFields
     module Fields
@@ -7,15 +9,19 @@ module Decidim
           validations = {
             presence: required?
           }
-          validations[:inclusion] = {
-            in: options[:values_in], 
+          if options[:values_in]
+            validations[:inclusion] = {
+              in: options[:values_in],
               message: ->(_, _) { label(:bad_values) }
-          } if options[:values_in]
+            }
+          end
 
-          validations[:format] = {
-            with: options[:format], 
-            message: ->(_, _) { label(:bad_format) }
-          } if options[:format]
+          if options[:format]
+            validations[:format] = {
+              with: options[:format],
+              message: ->(_, _) { label(:bad_format) }
+            }
+          end
 
           form.validates(name, validations)
         end
@@ -25,10 +31,11 @@ module Decidim
         end
 
         def sanitized_value(value)
-          return value.strip if value.present? && !value.blank?
+          return value.strip if value.present?
+
           nil
         end
-        
+
         def form_tag(form_tag)
           content_tag(
             :div,

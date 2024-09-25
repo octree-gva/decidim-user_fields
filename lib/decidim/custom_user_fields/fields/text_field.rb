@@ -31,7 +31,7 @@ module Decidim
         end
 
         def sanitized_value(value)
-          return value.strip if value.present?
+          return value.strip if value.present? && !value.blank?
 
           nil
         end

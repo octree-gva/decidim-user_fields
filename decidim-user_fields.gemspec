@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.email = ["hadrien@octree.ch"]
   s.license = "AGPL-3.0"
   s.homepage = "https://git.octree.ch/decidim/decidim-user_fields"
-  s.required_ruby_version = ">= 3.0"
+  s.required_ruby_version = ">= 3.2"
 
   s.name = "decidim-user_fields"
   s.summary = "Configure user fields for your decidim users"
@@ -20,9 +20,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency "decidim-core", Decidim::CustomUserFields.decidim_version
   s.add_dependency "decidim-verifications", Decidim::CustomUserFields.decidim_version
-  s.add_dependency "deface", ">= 1.8.1"
+  s.add_dependency "deface", ">= 1.9"
 
-  s.add_development_dependency "decidim-dev", Decidim::CustomUserFields.decidim_version
-  s.add_development_dependency "rubocop-faker"
   s.metadata["rubygems_mfa_required"] = "true"
 end

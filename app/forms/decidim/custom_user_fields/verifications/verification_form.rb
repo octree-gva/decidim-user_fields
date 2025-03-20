@@ -66,7 +66,7 @@ module Decidim
           extra_fields.reject { |field| field.options[:skip_update_on_verified] }.each do |field|
             extended_data[field.name] = field.sanitized_value(attributes[field.name])
           end
-          user.update!(extended_data: extended_data)
+          user.update!(extended_data:)
         end
       end
     end

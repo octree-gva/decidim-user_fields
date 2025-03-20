@@ -1,7 +1,8 @@
 services:
   decidim-user_fields:
+    container_name: decidim-user_fields
     command: bash -c "sleep infinity"
-    image: octree/decidim-dev:0.27
+    image: octree/decidim-dev:0.29
     entrypoint: ""
     volumes:
       - .:/home/decidim/module
@@ -19,9 +20,12 @@ services:
       - 3000:3000
     links:
       - user-fields-pg
+    depends_on:
+      - user-fields-pg
 
   user-fields-pg:
-    image: postgres:14
+    container_name: user-fields-pg
+    image: postgres:16
     volumes:
       - user_fields-pg-data:/var/lib/postgresql/data
     environment:

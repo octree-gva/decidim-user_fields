@@ -19,6 +19,6 @@ require "decidim/custom_user_fields/verifications/verifications"
 
 Decidim.register_global_engine(
   :decidim_custom_user_fields, # this is the name of the global method to access engine routes
-  ::Decidim::CustomUserFields::Engine,
+  Decidim::CustomUserFields::Engine,
   at: "/decidim_custom_user_fields"
 )

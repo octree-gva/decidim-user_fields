@@ -17,7 +17,7 @@ preserve_hierarchy: true
 #
 files: [
   {
-    "source": "/config/locales/decidim_user_fields.en.en.yml",
-    "translation": "/config/locales/decidim_user_fields.en.%two_letters_code%.yml",
+    "source": "/config/locales/decidim_user_fields.en.yml",
+    "translation": "/config/locales/decidim_user_fields.%two_letters_code%.yml",
   }
 ]

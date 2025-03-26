@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "decidim/custom_user_fields/fields/generic_field"
+require "decidim/custom_user_fields/fields/dummy_field"
 require "decidim/custom_user_fields/fields/date_field"
 require "decidim/custom_user_fields/fields/text_area_field"
 require "decidim/custom_user_fields/fields/text_field"

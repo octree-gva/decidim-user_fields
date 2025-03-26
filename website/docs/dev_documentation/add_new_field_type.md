@@ -33,7 +33,9 @@ module Decidim
           if options[:values_in]
             validations[:inclusion] = {
               in: options[:values_in],
-              message: ->(_, _) { label(:bad_values) }
+              message: Proc.new do 
+                label(:bad_values)
+              end
             }
           end
 

@@ -13,9 +13,15 @@ module Decidim
           }
           if options[:min].present? || options[:max].present?
             min_max_options = {
-              wrong_length: -> { label(:bad_length) },
-              too_long: -> { label(:too_long) },
-              too_short: -> { label(:too_short) }
+              wrong_length: Proc.new do 
+                label(:bad_length)
+              end,
+              too_long: Proc.new do
+                label(:too_long)
+              end,
+              too_short: Proc.new do
+                label(:too_short)
+              end
             }
             min_max_options[:minimum] = options[:min].to_i if options[:min].present?
             min_max_options[:maximum] = options[:max].to_i if options[:max].present?
@@ -40,13 +46,11 @@ module Decidim
           field_options = {
             rows: ui_options[:row] || 2,
             label: label(:label),
-            help_text: label_exists?(:help_text) && label(:help_text)
-          }
-          content_tag(
-            :div,
-            form_tag.text_area(name, **field_options),
+            help_text: label_exists?(:help_text) && label(:help_text),
+            label_options: {class: label_class_name},
             class: class_name
-          )
+          }
+          form_tag.text_area(name, **field_options)
         end
       end
     end

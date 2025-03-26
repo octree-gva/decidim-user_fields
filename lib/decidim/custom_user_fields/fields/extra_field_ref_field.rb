@@ -8,8 +8,9 @@ module Decidim
 
         def configure_form(form)
           match = Decidim::CustomUserFields.custom_fields.find { |field| field.name == name }
-          self.reference = Marshal.load(Marshal.dump(match))
-          reference.options = reference.options.merge(options)
+          raise "Field #{name} not found" unless match
+          self.reference = match.deep_dup
+          reference.options = reference.options.merge(options) unless options.empty?
           reference.configure_form(form)
         end
 
@@ -23,7 +24,7 @@ module Decidim
           have_content = reference.map_model(form.object, extended_data)
           if have_content && options[:hide_if_value]
             content_tag(
-              :div,
+              :span,
               form.hidden_field(name),
               class: class_name + " #{class_modifer("hidden")}"
             )

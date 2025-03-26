@@ -1,9 +1,14 @@
 # frozen_string_literal: true
 
-require "decidim/dev"
-
+ENV["RAILS_ENV"] = "test"
+ENV["NODE_ENV"] ||= "test"
 ENV["ENGINE_ROOT"] = File.dirname(__dir__)
 
-Decidim::Dev.dummy_app_path = ENV.fetch("ROOT")
+require "decidim/dev"
+
+Decidim::Dev.dummy_app_path = File.expand_path(File.join(__dir__, "decidim_dummy_app"))
 
 require "decidim/dev/test/base_spec_helper"
+require "decidim/core/test/factories"
+require "decidim/user_fields"
+Bullet.add_safelist type: :counter_cache, class_name: "Decidim::Proposals::Proposal", association: :coauthorships if defined?(Bullet)

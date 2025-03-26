@@ -12,14 +12,18 @@ module Decidim
           if options[:values_in]
             validations[:inclusion] = {
               in: options[:values_in],
-              message: ->(_, _) { label(:bad_values) }
+              message: Proc.new do |_, _| 
+                label(:bad_values) 
+              end
             }
           end
 
           if options[:format]
             validations[:format] = {
               with: options[:format],
-              message: ->(_, _) { label(:bad_format) }
+              message: Proc.new do |_, _| 
+                label(:bad_format) 
+              end
             }
           end
 
@@ -38,15 +42,13 @@ module Decidim
         end
 
         def form_tag(form_tag)
-          content_tag(
-            :div,
             form_tag.text_field(
               name,
               label: label(:label),
-              help_text: label_exists?(:help_text) && label(:help_text)
-            ),
-            class: class_name
-          )
+              help_text: label_exists?(:help_text) && label(:help_text),
+              class: class_name,
+              label_options: {class: label_class_name}
+            )
         end
       end
     end

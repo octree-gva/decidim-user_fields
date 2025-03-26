@@ -29,6 +29,8 @@ module Decidim
         @name = name.to_s.to_sym
         @type = kwargs[:type]
         case type
+        when :dummy
+          @field = Fields::DummyField.new(self, kwargs)
         when :text
           @field = Fields::TextField.new(self, kwargs)
         when :textarea

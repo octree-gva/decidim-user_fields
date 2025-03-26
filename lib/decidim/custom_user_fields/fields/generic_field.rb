@@ -55,8 +55,16 @@ module Decidim
           ].join(" ")
         end
 
-        def class_modifer(modifier)
-          "field--#{modifier}"
+        def label_class_name
+          @label_class_name ||= [
+            "field_label",
+            class_modifer(type, "field_label"),
+            class_modifer(name.to_s.underscore, "field_label")
+          ].join(" ")
+        end
+
+        def class_modifer(modifier, block="field")
+          "#{block}--#{modifier}"
         end
 
         def label_exists?(label, fallback: true)

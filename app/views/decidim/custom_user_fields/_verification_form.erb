@@ -1,4 +1,4 @@
-<div class="custom-user-fields__section">
+<div class="decidim_custom_user_fields__section decidim_custom_user_fields__section--verification">
     <%= form.hidden_field(:handler_name) %>
     <% handler.fields.collect {|custom_field| concat custom_field.form_tag(form) } %>
 </div>

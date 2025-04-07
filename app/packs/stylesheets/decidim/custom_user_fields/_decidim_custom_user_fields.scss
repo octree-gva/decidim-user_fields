@@ -1,0 +1,47 @@
+.decidim_custom_user_fields__section {
+  .field_label--date {
+    display: block;
+    margin-top: 1.5rem;
+  }
+  .datepicker__help-text-container {
+    height: unset;
+  }
+  
+  &--verification {
+
+    .field_label:not(:first-child) {
+      margin-top: 1rem;
+    }
+    .field_label {
+      &--text, &--textarea {
+        &, & input {
+          display: block !important;
+        }
+      }
+    }
+    .datepicker__datepicker-row {
+      display: block !important;
+    }
+    .datepicker__date-column, .datepicker__time-column {
+      display: flex;
+      gap: 1rem;
+    }
+    .datepicker__calendar-button {
+      top: unset;
+      left: unset;
+      right:unset;
+      bottom: unset;
+      transform: scale(1.5);
+      position: relative;
+    }
+  }
+  
+  &--registration, &--profile {
+    & > .field_label {
+      display: block;
+    }
+    & > .field_label:not(:last-child) {
+      margin-bottom: 2rem;
+    }
+  }
+}

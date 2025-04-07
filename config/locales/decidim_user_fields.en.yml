@@ -1,0 +1,17 @@
+en:
+  decidim:
+    custom_user_fields:
+      date:
+        required: "This date is required"
+        bad_format: "This date is badly formatted"
+        bad_not_before: "This date is invalid"
+        bad_not_after: "This date is invalid"
+        bad_date: "This date is invalid"
+      textarea:
+        required: "This text is required"
+        bad_length: "This text is invalid"
+        too_long: "Must be less than %{count} characters"
+        too_short: "Must be more than %{count} characters"
+      text:
+        bad_values: "This value is not allowed"
+        bad_format: "Please check this format again"

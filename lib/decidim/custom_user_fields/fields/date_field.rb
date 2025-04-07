@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Decidim
   module CustomUserFields
     module Fields
@@ -6,11 +8,15 @@ module Decidim
           form.attribute(name, String)
           validations = {
             presence: required? && {
-              message: ->() { label(:required) }
-            }, 
+              message: Proc.new do |object, data| 
+                label(:required) 
+              end
+            },
             format: {
-              with: /\A(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}\z/,
-              message: ->() { label(:bad_format) }
+              with: %r{\A\d{4}-\d{2}-\d{2}\z},
+              message: Proc.new do
+                label(:bad_format)
+              end
             }
           }
           form.validates(name, validations)
@@ -19,7 +25,7 @@ module Decidim
         def validate(value, _data, errors)
           date_value = nil
           begin
-            date_value = Date.strptime(value, "%d/%m/%Y")
+            date_value = Date.strptime(value, "%Y-%m-%d")
           rescue ::Date::Error
             errors.add(name, label(:bad_date))
             return
@@ -30,18 +36,21 @@ module Decidim
         end
 
         def map_model(form, data)
+          
           form[name] = data[name] if data[name].present?
         end
 
         def form_tag(form_tag)
-          content_tag(
-            :div,
-            form_tag.date_field(
-              name, 
-              label: label(:label),
-              help_text: label_exists?(:help_text) && label(:help_text)
-            ),
-            class: class_name
+          options = {
+            label: label(:label),
+            help_text: label_exists?(:help_text) && label(:help_text),
+            label_options: {class: label_class_name},
+            class: class_name,
+          }
+          options[:value] = Date.strptime(form_tag.object[name], "%Y-%m-%d") if form_tag.object[name].present?
+          form_tag.date_field(
+            name,
+            options
           )
         end
 
@@ -50,16 +59,17 @@ module Decidim
         def not_before_date
           Date.strptime(options[:not_before], "%Y-%m-%d")
         end
+
         def not_after_date
           Date.strptime(options[:not_after], "%Y-%m-%d")
         end
 
         def validate_not_before(value, errors)
-          errors.add(name,label(:bad_not_before) ) if value < not_before_date
+          errors.add(name, label(:bad_not_before)) if value < not_before_date
         end
 
         def validate_not_after(value, errors)
-          errors.add(name,label(:bad_not_after) ) if value > not_after_date
+          errors.add(name, label(:bad_not_after)) if value > not_after_date
         end
       end
     end

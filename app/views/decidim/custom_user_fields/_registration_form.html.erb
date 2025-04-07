@@ -1,4 +1,4 @@
-<div class="custom-user-fields__section">
+<div class="decidim_custom_user_fields__section decidim_custom_user_fields__section--registration">
     <% Decidim::CustomUserFields.custom_fields.collect do |field|
         concat field.form_tag(f)
     end %>

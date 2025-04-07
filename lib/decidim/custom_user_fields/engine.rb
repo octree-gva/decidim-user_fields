@@ -1,6 +1,8 @@
-require 'rails'
-require 'decidim/core'
-require 'deface'
+# frozen_string_literal: true
+
+require "rails"
+require "decidim/core"
+require "deface"
 
 module Decidim
   module CustomUserFields
@@ -12,7 +14,7 @@ module Decidim
         # root to: "custom_user_fields#index"
       end
 
-      initializer 'decidim_custom_user_fields.registration_additions' do
+      initializer "decidim_custom_user_fields.registration_additions" do
         config.to_prepare do
           Decidim::RegistrationForm.class_eval do
             include CustomUserFields::FormDefinition

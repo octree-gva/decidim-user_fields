@@ -1,4 +1,6 @@
-require 'forwardable'
+# frozen_string_literal: true
+
+require "forwardable"
 
 module Decidim
   module CustomUserFields
@@ -26,8 +28,9 @@ module Decidim
         @handler_name = handler_name
         @name = name.to_s.to_sym
         @type = kwargs[:type]
-        # TODO: parse kwargs
         case type
+        when :dummy
+          @field = Fields::DummyField.new(self, kwargs)
         when :text
           @field = Fields::TextField.new(self, kwargs)
         when :textarea

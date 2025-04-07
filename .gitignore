@@ -1,1 +1,5 @@
 .DS_Store
+vendor
+node_modules
+.env
+spec/decidim_dummy_app

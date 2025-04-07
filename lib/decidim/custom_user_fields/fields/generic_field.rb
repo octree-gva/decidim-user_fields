@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Decidim
   module CustomUserFields
     module Fields
@@ -9,14 +11,18 @@ module Decidim
 
         attr_reader :definition
         attr_accessor :options
+
         def initialize(definition, options)
           @definition = definition
           @options = options
         end
+
         def validate(_value, _data, _errors); end
+
         def sanitized_value(raw_value)
           raw_value
         end
+
         def skip_hashing?
           options[:skip_hashing].present?
         end
@@ -29,7 +35,7 @@ module Decidim
           raise Error, "Configure Form is not implemented for #{definition.type} type"
         end
 
-        def configure_settings(settings)
+        def configure_settings(_settings)
           raise Error, "Configure Settings is not implemented for #{definition.type} type"
         end
 
@@ -37,39 +43,47 @@ module Decidim
           raise Error, "Map Model is not implemented for #{definition.type} type"
         end
 
-        def form_tag(_form, _custom_label=nil)
+        def form_tag(_form, _custom_label = nil)
           raise Error, "Form Tag is not implemented for #{definition.type} type"
         end
 
         def class_name
-          class_specifier = name.to_s.underscore
-          [
+          @class_name ||= [
             "field",
             class_modifer(type),
             class_modifer(name.to_s.underscore)
-        ].join(" ")
+          ].join(" ")
         end
 
-        def class_modifer(modifier)
-          "field--#{modifier}"
+        def label_class_name
+          @label_class_name ||= [
+            "field_label",
+            class_modifer(type, "field_label"),
+            class_modifer(name.to_s.underscore, "field_label")
+          ].join(" ")
+        end
+
+        def class_modifer(modifier, block="field")
+          "#{block}--#{modifier}"
         end
 
         def label_exists?(label, fallback: true)
           handler_label = I18n.exists?(i18n_handler_label(label))
           return handler_label unless fallback
+
           fallback_label = I18n.exists?(i18n_fallback_label(label))
           handler_label || fallback_label
         end
 
         def label(label, fallback: true)
-          puts i18n_handler_label(label)
+          Rails.logger.debug i18n_handler_label(label)
 
           I18n.t(
-              i18n_handler_label(label), 
-              default: fallback ? I18n.t(i18n_fallback_label(label)) : nil
-            )
+            i18n_handler_label(label),
+            default: fallback ? I18n.t(i18n_fallback_label(label)) : nil
+          )
         end
-        
+
         def required?
           options[:required].present? && options[:required]
         end
@@ -78,14 +92,14 @@ module Decidim
           @i18n_context ||= "decidim.custom_user_fields.#{handler_name}"
         end
 
-        def i18n_context=(context)
-          @i18n_context=context
-        end
+        attr_writer :i18n_context
 
         private
+
         def i18n_handler_label(label)
           "#{i18n_context}.#{name}.#{label}"
         end
+
         def i18n_fallback_label(label)
           "decidim.custom_user_fields.#{type}.#{label}"
         end

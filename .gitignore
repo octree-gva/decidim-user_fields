@@ -2,4 +2,5 @@
 vendor
 node_modules
 .env
+coverage
 spec/decidim_dummy_app

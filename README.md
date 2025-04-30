@@ -56,7 +56,16 @@ Decidim::CustomUserFields.configure do |config|
   config.add_field :purpose, type: :text, required: false
 end
 ```
-
+## Ephemerable verifications
+To set an authorization as ephemerable, you can use `ephemerable!`:
+```
+Rails.application.config.after_initialize  do
+  Decidim::CustomUserFields::Verifications.register("PB2024") do |config|
+    config.ephemerable!
+  end
+end
+```
+This will have no effect under < 30, or without the `decidim-ephemerable` gem. 
 
 ### Available field types
 
@@ -138,6 +147,7 @@ end
 # Fields for the verification PB2024
 Rails.application.config.after_initialize  do
   Decidim::CustomUserFields::Verifications.register("PB2024") do |config|
+    config.ephemerable!
     config.add_field :first_name, type: :extra_field_ref, required: true, skip_hashing: true, hide_if_value: true
     config.add_field :last_name, type: :extra_field_ref, required: true, skip_hashing: true, hide_if_value: true
     config.add_field :birthdate, type: :date, required: true, not_after: 18.years.ago.to_date.iso8601

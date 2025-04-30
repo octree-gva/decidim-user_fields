@@ -10,10 +10,19 @@ module Decidim
         def initialize(name)
           @name = name.to_s
           @fields = []
+          @ephemerable = false
         end
 
         def add_field(field_name, field_definition)
           fields.push(FieldDefinition.new(field_name, field_definition, handler_name))
+        end
+        
+        def ephemerable!
+          @ephemerable = true
+        end
+        
+        def ephemerable?
+          @ephemerable
         end
 
         def handler_name
@@ -28,6 +37,7 @@ module Decidim
           Decidim::Verifications.register_workflow(handler_name.to_sym) do |workflow|
             workflow.form = "Decidim::CustomUserFields::Verifications::#{klass_name}"
             klass = Decidim::CustomUserFields::Verifications.create_verification_class(klass_name)
+            klass.ephemerable = ephemerable? if klass.respond_to?(:ephemerable=)
             klass.decidim_custom_fields = fields
             fields.map do |field|
               field.configure_form(klass)

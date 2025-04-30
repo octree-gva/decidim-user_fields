@@ -6,11 +6,23 @@ module Decidim
       class Builder
         attr_reader :name
         attr_accessor :fields
-
+        attr_accessor :renewable
+        attr_accessor :time_between_renewals
         def initialize(name)
           @name = name.to_s
           @fields = []
           @ephemerable = false
+          @renewable = false
+          @time_between_renewals = nil
+        end
+
+        def renewable!(time_between_renewals = 1.day)
+          @renewable = true
+          @time_between_renewals = time_between_renewals
+        end
+
+        def renewable?
+          @renewable
         end
 
         def add_field(field_name, field_definition)
@@ -38,6 +50,9 @@ module Decidim
             workflow.form = "Decidim::CustomUserFields::Verifications::#{klass_name}"
             klass = Decidim::CustomUserFields::Verifications.create_verification_class(klass_name)
             klass.ephemerable = ephemerable? if klass.respond_to?(:ephemerable=)
+            klass.renewable = renewable?
+            klass.time_between_renewals = time_between_renewals unless time_between_renewals.nil?
+
             klass.decidim_custom_fields = fields
             fields.map do |field|
               field.configure_form(klass)

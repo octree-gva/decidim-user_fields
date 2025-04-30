@@ -56,12 +56,26 @@ Decidim::CustomUserFields.configure do |config|
   config.add_field :purpose, type: :text, required: false
 end
 ```
+## Renewable verifications
+To set an authorization as renewable, you can use `renewable!(time_between_renew)`:
+```
+Rails.application.config.after_initialize  do
+  Decidim::CustomUserFields::Verifications.register("PB2024") do |config|
+    config.renewable!(2.days) # Will need to renew authorization after 2 days.
+  end
+end
+```
+This will have no effect under < 30, or without the `decidim-ephemerable` gem. 
+
+
+
 ## Ephemerable verifications
 To set an authorization as ephemerable, you can use `ephemerable!`:
 ```
 Rails.application.config.after_initialize  do
   Decidim::CustomUserFields::Verifications.register("PB2024") do |config|
     config.ephemerable!
+    config.renewable!(1.day) # The ephemerable will be valid for a day
   end
 end
 ```

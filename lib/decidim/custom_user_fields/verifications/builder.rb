@@ -48,9 +48,10 @@ module Decidim
           Decidim::Verifications.register_workflow(handler_name.to_sym) do |workflow|
             workflow.form = "Decidim::CustomUserFields::Verifications::#{klass_name}"
             klass = Decidim::CustomUserFields::Verifications.create_verification_class(klass_name)
-            klass.ephemerable = ephemerable? if klass.respond_to?(:ephemerable=)
-            klass.renewable = renewable?
-            klass.time_between_renewals = time_between_renewals unless time_between_renewals.nil?
+            workflow.ephemerable = ephemerable? if workflow.respond_to?(:ephemerable=)
+            workflow.renewable = renewable? if workflow.respond_to?(:renewable=)
+            workflow.time_between_renewals = time_between_renewals unless time_between_renewals.nil?
+            workflow.metadata_cell = "decidim/verifications/authorization_metadata"
 
             klass.decidim_custom_fields = fields
             fields.map do |field|

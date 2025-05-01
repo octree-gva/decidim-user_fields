@@ -67,15 +67,16 @@ module Decidim
           "#{block}--#{modifier}"
         end
 
-        def label_exists?(label, fallback: true)
+        def label_exists?(label, fallback: false)
           handler_label = I18n.exists?(i18n_handler_label(label))
+          Rails.logger.error("Missing #{i18n_handler_label(label)}") unless handler_label
           return handler_label unless fallback
-
           fallback_label = I18n.exists?(i18n_fallback_label(label))
+          Rails.logger.error("Missing #{i18n_fallback_label(label)}") unless fallback_label
           handler_label || fallback_label
         end
 
-        def label(label, fallback: true)
+        def label(label, fallback: false)
           Rails.logger.debug i18n_handler_label(label)
 
           I18n.t(

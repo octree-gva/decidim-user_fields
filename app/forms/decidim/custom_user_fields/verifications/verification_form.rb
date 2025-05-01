@@ -59,7 +59,7 @@ module Decidim
         def non_extra_fields
           fields.reject { |f| f.type == :extra_field_ref }
         end
-        
+
         def extra_fields
           fields.select { |f| f.type == :extra_field_ref }
         end

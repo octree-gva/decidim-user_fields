@@ -9,6 +9,7 @@ module Decidim
         def configure_form(form)
           match = Decidim::CustomUserFields.custom_fields.find { |field| field.name == name }
           raise "Field #{name} not found" unless match
+
           self.reference = match.deep_dup
           reference.options = reference.options.merge(options) unless options.empty?
           reference.configure_form(form)

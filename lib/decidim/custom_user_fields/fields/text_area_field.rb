@@ -13,13 +13,13 @@ module Decidim
           }
           if options[:min].present? || options[:max].present?
             min_max_options = {
-              wrong_length: Proc.new do 
+              wrong_length: proc do
                 label(:bad_length)
               end,
-              too_long: Proc.new do
+              too_long: proc do
                 label(:too_long)
               end,
-              too_short: Proc.new do
+              too_short: proc do
                 label(:too_short)
               end
             }
@@ -47,7 +47,7 @@ module Decidim
             rows: ui_options[:row] || 2,
             label: label(:label),
             help_text: label_exists?(:help_text) && label(:help_text),
-            label_options: {class: label_class_name},
+            label_options: { class: label_class_name },
             class: class_name
           }
           form_tag.text_area(name, **field_options)

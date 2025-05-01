@@ -12,8 +12,7 @@ module Decidim
         end
 
         def validation_hash
-          {
-          }
+          {}
         end
 
         def map_model(form, data)
@@ -27,7 +26,7 @@ module Decidim
           nil
         end
 
-        def form_tag(form_tag)
+        def form_tag(_form_tag)
           {
             name:,
             label: label(:label),

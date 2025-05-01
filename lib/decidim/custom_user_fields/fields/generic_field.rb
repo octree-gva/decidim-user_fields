@@ -63,7 +63,7 @@ module Decidim
           ].join(" ")
         end
 
-        def class_modifer(modifier, block="field")
+        def class_modifer(modifier, block = "field")
           "#{block}--#{modifier}"
         end
 

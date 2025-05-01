@@ -5,9 +5,8 @@ module Decidim
     module Verifications
       class Builder
         attr_reader :name
-        attr_accessor :fields
-        attr_accessor :renewable
-        attr_accessor :time_between_renewals
+        attr_accessor :fields, :renewable, :time_between_renewals
+
         def initialize(name)
           @name = name.to_s
           @fields = []
@@ -28,11 +27,11 @@ module Decidim
         def add_field(field_name, field_definition)
           fields.push(FieldDefinition.new(field_name, field_definition, handler_name))
         end
-        
+
         def ephemerable!
           @ephemerable = true
         end
-        
+
         def ephemerable?
           @ephemerable
         end

@@ -8,13 +8,13 @@ module Decidim
           form.attribute(name, String)
           validations = {
             presence: required? && {
-              message: Proc.new do |object, data| 
-                label(:required) 
+              message: proc do |_object, _data|
+                label(:required)
               end
             },
             format: {
-              with: %r{\A\d{4}-\d{2}-\d{2}\z},
-              message: Proc.new do
+              with: /\A\d{4}-\d{2}-\d{2}\z/,
+              message: proc do
                 label(:bad_format)
               end
             }
@@ -36,7 +36,6 @@ module Decidim
         end
 
         def map_model(form, data)
-          
           form[name] = data[name] if data[name].present?
         end
 
@@ -44,8 +43,8 @@ module Decidim
           options = {
             label: label(:label),
             help_text: label_exists?(:help_text) && label(:help_text),
-            label_options: {class: label_class_name},
-            class: class_name,
+            label_options: { class: label_class_name },
+            class: class_name
           }
           options[:value] = Date.strptime(form_tag.object[name], "%Y-%m-%d") if form_tag.object[name].present?
           form_tag.date_field(

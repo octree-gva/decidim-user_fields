@@ -3,11 +3,12 @@
     display: block;
     margin-top: 1.5rem;
   }
+  
   .datepicker__help-text-container {
     height: unset;
   }
   
-  &--verification {
+  &--verification, &--registration {
 
     .field_label:not(:first-child) {
       margin-top: 1rem;

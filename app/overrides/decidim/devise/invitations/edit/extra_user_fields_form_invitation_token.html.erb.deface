@@ -1,2 +1,0 @@
-<!-- replace "erb[loud]:contains('f.hidden_field')" -->
-<%= f.hidden_field :invitation_token, value: f.object.context.invitation_token %>

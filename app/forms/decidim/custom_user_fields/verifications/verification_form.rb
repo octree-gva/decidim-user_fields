@@ -11,8 +11,6 @@ module Decidim
         include ActiveModel::Validations::Callbacks
 
         before_validation :sanitize_values
-
-        attribute :user, ::Decidim::User
         validate :custom_field_validation
 
         class << self

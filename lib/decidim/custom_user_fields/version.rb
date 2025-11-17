@@ -2,8 +2,8 @@
 
 module Decidim
   module CustomUserFields
-    def self.version
-      "0.0.4"
+    def self.version 
+      "0.1.4" # DO NOT UPDATE MANUALLY
     end
 
     def self.decidim_version

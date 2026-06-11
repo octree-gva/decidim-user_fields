@@ -5,9 +5,9 @@ services:
     image: octree/decidim-dev:0.29
     entrypoint: ""
     volumes:
-      - .:/home/decidim/module
-      - bundle:/home/decidim/app/vendor
-      - node_modules:/home/decidim/app/node_modules
+      - .:/home/module
+      - bundle:/home/decidim/vendor
+      - node_modules:/home/decidim/node_modules
     environment:
       - PORT=3000
       - DATABASE_HOST=pg
@@ -19,10 +19,9 @@ services:
       - RAILS_ENV=development
     ports:
       - 3000:3000
-    links:
-      - user-fields-pg
     depends_on:
-      - user-fields-pg
+      user-fields-pg:
+        condition: service_healthy
 
   user-fields-pg:
     container_name: user-fields-pg
@@ -33,6 +32,12 @@ services:
       - POSTGRES_DATABASE=decidim
       - POSTGRES_USER=decidim
       - POSTGRES_PASSWORD=pleaseChangeMe
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U decidim -d decidim"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
 volumes:
   node_modules: {}

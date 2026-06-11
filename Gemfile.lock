@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    decidim-user_fields (0.0.4)
+    decidim-user_fields (0.1.4)
       decidim-core (>= 0.29)
       decidim-verifications (>= 0.29)
       deface (>= 1.9)

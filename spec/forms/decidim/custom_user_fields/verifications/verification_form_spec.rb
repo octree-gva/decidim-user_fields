@@ -5,7 +5,7 @@ require "spec_helper"
 describe Decidim::CustomUserFields::Verifications::VerificationForm do
   subject do
     klass = Decidim::CustomUserFields::Verifications.create_verification_class(
-      "UserFieldsDummyVerification"
+      klass_name
     )
     fields = [dummy_field]
     klass.decidim_custom_fields = fields
@@ -15,6 +15,7 @@ describe Decidim::CustomUserFields::Verifications::VerificationForm do
     klass.new(test_field: data, user:)
   end
 
+  let(:klass_name) { "UserFieldsDummyVerification#{SecureRandom.hex(6)}" }
   let(:dummy_field) do
     Decidim::CustomUserFields::FieldDefinition.new(
       :test_field,
@@ -27,6 +28,10 @@ describe Decidim::CustomUserFields::Verifications::VerificationForm do
 
   before do
     allow(dummy_field.field).to receive(:validation_hash).and_return({ presence: true })
+  end
+
+  after do
+    Decidim::CustomUserFields::Verifications.send(:remove_const, klass_name) if Decidim::CustomUserFields::Verifications.const_defined?(klass_name)
   end
 
   describe "#sanitize_values" do

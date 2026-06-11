@@ -4,3 +4,6 @@ node_modules
 .env
 coverage
 spec/decidim_dummy_app
+.byebug_history
+.rspec-failures
+coverage

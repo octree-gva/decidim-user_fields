@@ -2,6 +2,7 @@
 
 if ENV["SIMPLECOV"]
   SimpleCov.start do
+    minimum_coverage 80
     track_files "**/*.rb"
 
     # We ignore some of the files because they are never tested

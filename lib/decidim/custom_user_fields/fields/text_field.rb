@@ -27,7 +27,7 @@ module Decidim
             }
           end
 
-          form.validates(name, validations)
+          apply_form_validations(form, validations)
         end
 
         def map_model(form, data)

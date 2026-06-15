@@ -4,7 +4,9 @@ require "decidim/dev/common_rake"
 
 def install_module(path)
   Dir.chdir(path) do
-    # system("bundle exec rails decidim_user_fields:install:migrations")
+    Bundler.with_unbundled_env do
+      sh "bundle exec rails decidim_toggle:install:migrations"
+    end
   end
 end
 

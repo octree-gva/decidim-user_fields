@@ -3,31 +3,33 @@
 require "spec_helper"
 
 describe Decidim::CustomUserFields do
-  around do |example|
-    original = described_class.custom_fields.dup
-    described_class.custom_fields.clear
-    example.run
-  ensure
-    described_class.custom_fields.replace(original)
-  end
-
   describe ".default_email_on_notification" do
     it "defaults to false" do
       expect(described_class.default_email_on_notification).to be(false)
     end
   end
 
-  describe ".add_field" do
-    it "adds a field definition and returns self" do
-      expect do
-        expect(described_class.add_field(:foo, type: :dummy)).to eq(described_class)
-      end.to change(described_class.custom_fields, :length).by(1)
+  describe ".register_field_set" do
+    it "registers a field set with fields" do
+      with_registration_field_sets do
+        described_class.register_field_set(:community) do |set|
+          set.add_field(:social_url, type: :text, required: false)
+        end
 
-      field = described_class.custom_fields.last
-      expect(field).to be_a(Decidim::CustomUserFields::FieldDefinition)
-      expect(field.name).to eq(:foo)
-      expect(field.type).to eq(:dummy)
-      expect(field.handler_name).to eq("extended_data")
+        field_set = Decidim::CustomUserFields::RegistrationFieldSets.find(:community)
+        expect(field_set.fields.length).to eq(1)
+        expect(field_set.fields.first.name).to eq(:social_url)
+      end
+    end
+
+    it "rejects reserved extended_data keys" do
+      with_registration_field_sets do
+        expect do
+          described_class.register_field_set(:bad) do |set|
+            set.add_field(:interested_scopes, type: :text)
+          end
+        end.to raise_error(Decidim::CustomUserFields::Error, /reserved/)
+      end
     end
   end
 end

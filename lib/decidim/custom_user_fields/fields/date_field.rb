@@ -19,7 +19,7 @@ module Decidim
               end
             }
           }
-          form.validates(name, validations)
+          apply_form_validations(form, validations)
         end
 
         def validate(value, _data, errors)

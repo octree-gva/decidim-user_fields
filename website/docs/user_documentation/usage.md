@@ -2,13 +2,14 @@
 sidebar_position: 6
 description: Use this module
 ---
-## How to add a custom user field.
-Create an initializer `config/initializers/custom_user_fields.rb`
+## Registration field sets
+Register named field sets in `config/initializers/custom_user_fields.rb`. Enable one per organization in **System → Organizations → Registration fields** (requires `decidim-toggle`).
+
 ```ruby
-Decidim::CustomUserFields.configure do |config|
-  config.add_field :birthdate, type: :date, required: true
-  config.add_field :address, type: :textarea, required: false, rows: 10
-  config.add_field :purpose, type: :text, required: false
+Decidim::CustomUserFields.register_field_set :default do |set|
+  set.add_field :birthdate, type: :date, required: true
+  set.add_field :address, type: :textarea, required: false, rows: 10
+  set.add_field :purpose, type: :text, required: false
 end
 ```
 
@@ -84,15 +85,14 @@ fr:
 # Create an authorization with custom fields
 
 ```ruby
-# Fields added to the profile
-Decidim::CustomUserFields.configure do |config|
-  config.add_field :first_name, type: :text, required: false
-  config.add_field :last_name, type: :text, required: false
+Decidim::CustomUserFields.register_field_set :pb2024_profile do |set|
+  set.add_field :first_name, type: :text, required: false
+  set.add_field :last_name, type: :text, required: false
 end
 
-# Fields for the verification PB2024
-Rails.application.config.after_initialize  do
+Rails.application.config.after_initialize do
   Decidim::CustomUserFields::Verifications.register("PB2024") do |config|
+    config.field_set :pb2024_profile
     config.add_field :first_name, type: :extra_field_ref, required: true, skip_hashing: true, hide_if_value: true
     config.add_field :last_name, type: :extra_field_ref, required: true, skip_hashing: true, hide_if_value: true
     config.add_field :birthdate, type: :date, required: true, not_after: 18.years.ago.to_date.iso8601

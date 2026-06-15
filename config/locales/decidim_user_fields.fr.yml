@@ -1,6 +1,11 @@
 fr:
   decidim:
     custom_user_fields:
+      system:
+        registration_fields_tab: "Champs d'inscription"
+        field_sets:
+          none: "Aucun"
+          incompatible_authorizations: "Incompatible avec les autorisations activées : %{authorizations}"
       date:
         required: "Cette date est obligatoire"
         bad_format: "Cette date est mal formatée"

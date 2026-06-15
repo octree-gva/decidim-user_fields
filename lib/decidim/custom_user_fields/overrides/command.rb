@@ -39,8 +39,9 @@ module Decidim
       end
 
       def extended_data
+        org = @form.try(:current_organization)
         custom_data = {}
-        Decidim::CustomUserFields.custom_fields.each do |field_def|
+        RegistrationFields.active_registration_fields(org).each do |field_def|
           custom_data[field_def.name] = @form[field_def.name]
         end
         @extended_data ||= (@user&.extended_data || {}).merge(custom_data)

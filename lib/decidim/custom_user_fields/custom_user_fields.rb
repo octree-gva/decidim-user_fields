@@ -16,13 +16,8 @@ module Decidim
       false
     end
 
-    def self.custom_fields
-      @custom_fields ||= []
-    end
-
-    def self.add_field(field_type, field_definition)
-      custom_fields.push(FieldDefinition.new(field_type, field_definition, "extended_data"))
-      self
+    def self.register_field_set(name, &block)
+      RegistrationFieldSets.register_field_set(name, &block)
     end
 
     class Error < StandardError; end

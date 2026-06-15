@@ -50,5 +50,22 @@ describe Decidim::CustomUserFields::Verifications do
     ensure
       described_class.send(:remove_const, klass_name) if described_class.const_defined?(klass_name)
     end
+
+    it "stores workflow field_set when declared" do
+      handler_name = "bound_verification#{SecureRandom.hex(4)}"
+      klass_name = handler_name.camelize
+
+      allow(Decidim::Verifications).to receive(:register_workflow)
+
+      described_class.register(handler_name) do |builder|
+        builder.field_set(:community)
+        builder.add_field(:test_field, type: :text)
+      end
+
+      expect(described_class.workflow_field_set(handler_name)).to eq(:community)
+    ensure
+      described_class.workflow_field_sets.delete(handler_name)
+      described_class.send(:remove_const, klass_name) if described_class.const_defined?(klass_name)
+    end
   end
 end

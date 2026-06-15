@@ -8,7 +8,7 @@ module Decidim
           form.attribute(name, String)
           validations = validation_hash
 
-          form.validates(name, validations)
+          apply_form_validations(form, validation_hash)
         end
 
         def validation_hash

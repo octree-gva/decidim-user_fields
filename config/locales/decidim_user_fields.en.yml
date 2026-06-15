@@ -1,6 +1,11 @@
 en:
   decidim:
     custom_user_fields:
+      system:
+        registration_fields_tab: "Registration fields"
+        field_sets:
+          none: "None"
+          incompatible_authorizations: "Incompatible with enabled authorizations: %{authorizations}"
       date:
         required: "This date is required"
         bad_format: "This date is badly formatted"

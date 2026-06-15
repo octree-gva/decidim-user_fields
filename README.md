@@ -37,23 +37,45 @@ This Decidim module adds custom user fields through a configuration file and wit
 
 
 ## Install the module
-Add the gem to your Gemfile
+Add the gems to your Gemfile
 ```ruby
 gem "decidim-user_fields"
+gem "decidim-toggle",
+    git: "https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-toggle",
+    branch: "main"
 ```
 
-Run bundle
+Run bundle and install toggle migrations:
 ```bash
 bundle install
+rails decidim_toggle:install:migrations
+rails db:migrate
 ```
+
+## Registration field sets (per organization)
+
+Register named field sets in an initializer. Sysadmins pick one per organization in **System → Organizations → Registration fields** (via decidim-toggle).
+
+```ruby
+Decidim::CustomUserFields.register_field_set :community do |set|
+  set.add_field :social_media_url, type: :text, required: false
+end
+
+Decidim::CustomUserFields.register_field_set :ngos do |set|
+  set.add_field :organization_name, type: :text, required: true
+  set.add_field :organization_email, type: :text, required: true
+end
+```
+
+Field set labels for the admin radio group: `decidim.custom_user_fields.field_sets.<name>`.
 
 ## How to add a custom user field.
 Create an initializer `config/initializers/custom_user_fields.rb`
 ```ruby
-Decidim::CustomUserFields.configure do |config|
-  config.add_field :birthdate, type: :date, required: true
-  config.add_field :address, type: :textarea, required: false, rows: 10
-  config.add_field :purpose, type: :text, required: false
+Decidim::CustomUserFields.register_field_set :default do |set|
+  set.add_field :birthdate, type: :date, required: true
+  set.add_field :address, type: :textarea, required: false, rows: 10
+  set.add_field :purpose, type: :text, required: false
 end
 ```
 ## Renewable verifications
@@ -152,15 +174,16 @@ fr:
 # Create an authorization with custom fields
 
 ```ruby
-# Fields added to the profile
-Decidim::CustomUserFields.configure do |config|
-  config.add_field :first_name, type: :text, required: false
-  config.add_field :last_name, type: :text, required: false
+# Registration / profile fields
+Decidim::CustomUserFields.register_field_set :pb2024_profile do |set|
+  set.add_field :first_name, type: :text, required: false
+  set.add_field :last_name, type: :text, required: false
 end
 
 # Fields for the verification PB2024
-Rails.application.config.after_initialize  do
+Rails.application.config.after_initialize do
   Decidim::CustomUserFields::Verifications.register("PB2024") do |config|
+    config.field_set :pb2024_profile
     config.ephemerable!
     config.add_field :first_name, type: :extra_field_ref, required: true, skip_hashing: true, hide_if_value: true
     config.add_field :last_name, type: :extra_field_ref, required: true, skip_hashing: true, hide_if_value: true

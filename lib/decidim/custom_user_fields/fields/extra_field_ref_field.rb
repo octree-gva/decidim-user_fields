@@ -4,15 +4,16 @@ module Decidim
   module CustomUserFields
     module Fields
       class ExtraFieldRefField < GenericField
-        attr_accessor :reference
+        attr_accessor :reference, :field_set_name
 
         def configure_form(form)
-          match = Decidim::CustomUserFields.custom_fields.find { |field| field.name == name }
-          raise "Field #{name} not found" unless match
-
-          self.reference = match.deep_dup
+          self.reference = resolve_reference_definition
           reference.options = reference.options.merge(options) unless options.empty?
           reference.configure_form(form)
+        end
+
+        def validate_field_set_reference!
+          resolve_reference_definition
         end
 
         def map_model(_form, _data)
@@ -43,6 +44,24 @@ module Decidim
         end
 
         private
+
+        def reference_field_name
+          (options[:ref] || name).to_sym
+        end
+
+        def resolve_reference_definition
+          if field_set_name.blank?
+            raise "field_set must be set for extra_field_ref field #{name}"
+          end
+
+          field_set = RegistrationFieldSets.find(field_set_name)
+          raise "Field set #{field_set_name} not found" unless field_set
+
+          match = field_set.fields.find { |field| field.name == reference_field_name }
+          raise "Field #{reference_field_name} not found in field set #{field_set_name}" unless match
+
+          match.deep_dup
+        end
 
         def current_user(form)
           form.object.user

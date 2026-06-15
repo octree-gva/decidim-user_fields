@@ -40,4 +40,40 @@ describe Decidim::CustomUserFields::Verifications::Builder do
       expect(field_def.handler_name).to eq(builder.handler_name)
     end
   end
+
+  describe "#field_set" do
+    it "stores the field set name" do
+      builder.field_set(:community)
+      expect(builder.field_set).to eq(:community)
+    end
+  end
+
+  describe "#register_workflow!" do
+    it "requires field_set when extra_field_ref is used" do
+      with_registration_field_sets do
+        Decidim::CustomUserFields.register_field_set(:community) { |set| set.add_field(:foo, type: :dummy) }
+        builder.add_field(:foo, type: :extra_field_ref)
+
+        expect do
+          builder.register_workflow!
+        end.to raise_error(Decidim::CustomUserFields::Error, /field_set must be set/)
+      end
+    end
+
+    it "registers workflow when extra_field_ref matches field_set" do
+      with_registration_field_sets do
+        Decidim::CustomUserFields.register_field_set(:community) { |set| set.add_field(:foo, type: :dummy) }
+        builder.field_set(:community)
+        builder.add_field(:foo, type: :extra_field_ref)
+
+        workflow = Class.new do
+          attr_accessor :form, :metadata_cell, :ephemerable, :renewable, :time_between_renewals
+        end.new
+        allow(Decidim::Verifications).to receive(:register_workflow).and_yield(workflow)
+
+        expect { builder.register_workflow! }.not_to raise_error
+        expect(workflow.form).to eq("Decidim::CustomUserFields::Verifications::TestVerification")
+      end
+    end
+  end
 end

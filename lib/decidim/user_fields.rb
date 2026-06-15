@@ -10,6 +10,10 @@ require "decidim/custom_user_fields/field_definition"
 
 require "decidim/custom_user_fields/helpers/application_helper"
 require "decidim/custom_user_fields/custom_user_fields"
+require "decidim/custom_user_fields/registration_field_sets"
+require "decidim/custom_user_fields/registration_fields"
+require "decidim/custom_user_fields/authorization_field_set_compatibility"
+require "decidim/custom_user_fields/toggle/authorizations_field_set_validation"
 require "decidim/custom_user_fields/overrides/command"
 require "decidim/custom_user_fields/overrides/form_definition"
 

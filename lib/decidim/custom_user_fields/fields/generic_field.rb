@@ -88,6 +88,29 @@ module Decidim
           options[:required].present? && options[:required]
         end
 
+        def apply_form_validations(form, validations)
+          validations = validations.dup
+          if validations.key?(:presence)
+            validations.delete(:presence) if validations[:presence] == false
+          elsif required?
+            validations[:presence] = true
+          end
+          return if validations.blank?
+
+          field_name = name
+          options = {}
+          if registration_form?(form)
+            options[:if] = lambda { |record|
+              record.active_custom_field_names.include?(field_name)
+            }
+          end
+          form.validates(name, validations, **options)
+        end
+
+        def registration_form?(form)
+          form.included_modules.include?(Decidim::CustomUserFields::FormDefinition)
+        end
+
         def i18n_context
           @i18n_context ||= "decidim.custom_user_fields.#{handler_name}"
         end

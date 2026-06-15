@@ -2,6 +2,7 @@
 
 require "rails"
 require "decidim/core"
+require "decidim/toggle"
 require "deface"
 
 module Decidim
@@ -38,6 +39,23 @@ module Decidim
           Decidim::UpdateAccount.class_eval do
             prepend CustomUserFields::Command
           end
+
+          Decidim::Toggle::UpdateAuthorizationsForm.include(
+            CustomUserFields::Toggle::AuthorizationsFieldSetValidation
+          )
+        end
+      end
+
+      initializer "decidim_custom_user_fields.organization_settings_tab",
+                  after: "decidim_toggle.organization_settings_tabs" do
+        Decidim::Toggle.settings_tabs :organization_settings do |tabs|
+          next unless RegistrationFieldSets.any?
+
+          tabs.add_tab :registration_fields,
+                       I18n.t("decidim.custom_user_fields.system.registration_fields_tab"),
+                       form: Admin::RegistrationFieldSetConfigForm,
+                       command: Decidim::Toggle::UpdateModuleConfigCommand,
+                       module_name: :custom_user_fields
         end
       end
     end

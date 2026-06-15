@@ -11,4 +11,5 @@ Decidim::Dev.dummy_app_path = File.expand_path(File.join(__dir__, "decidim_dummy
 require "decidim/dev/test/base_spec_helper"
 require "decidim/core/test/factories"
 require "decidim/user_fields"
+require "support/registration_field_sets_helpers"
 Bullet.add_safelist type: :counter_cache, class_name: "Decidim::Proposals::Proposal", association: :coauthorships if defined?(Bullet)

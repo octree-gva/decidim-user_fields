@@ -1,6 +1,6 @@
 {
   "name": "decidim-user_fields",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Custom user fields",
   "main": "index.js",
   "directories": {

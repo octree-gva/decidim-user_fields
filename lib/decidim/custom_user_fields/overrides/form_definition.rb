@@ -4,13 +4,18 @@ require "active_support/concern"
 
 module Decidim
   module CustomUserFields
-    # Extra user fields definitions for forms
     module FormDefinition
       extend ActiveSupport::Concern
 
       class_methods do
         def custom_user_field_validation_if(name)
           ->(record) { record.active_custom_field_names.include?(name) }
+        end
+
+        def apply_registration_fields!(form_class = self)
+          RegistrationFields.all_registration_fields.each do |field_def|
+            field_def.configure_form(form_class)
+          end
         end
       end
 
@@ -29,8 +34,11 @@ module Decidim
       end
 
       def map_model(model)
-        extended_data = model.extended_data.with_indifferent_access
+        extended_data = (model.extended_data || {}).with_indifferent_access
+        active_names = active_custom_field_names
         RegistrationFields.all_registration_fields.each do |field_def|
+          next unless active_names.include?(field_def.name)
+
           field_def.map_model(self, extended_data)
         end
       end

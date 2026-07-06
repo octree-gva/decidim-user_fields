@@ -1,0 +1,3 @@
+<!-- insert_after "erb[loud]:contains('oauth_signature')" -->
+
+<%= render partial: "/decidim/custom_user_fields/registration_form", locals: { f: f, resource: resource } %>

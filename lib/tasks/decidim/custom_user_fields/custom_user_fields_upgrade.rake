@@ -9,5 +9,8 @@ if Rake::Task.task_defined?("decidim:upgrade")
   Rake::Task["decidim:upgrade"].enhance do
     name = Decidim::CustomUserFields::Engine.railtie_name
     Rake::Task["#{name}:webpacker:install"].invoke if Rake::Task.task_defined?("#{name}:webpacker:install")
+
+    migrate_task = "#{name}:upgrade:migrate_toggle_config"
+    Rake::Task[migrate_task].invoke if Rake::Task.task_defined?(migrate_task)
   end
 end

@@ -16,7 +16,7 @@ describe Decidim::CustomUserFields::Fields::TextField do
           (@attributes ||= {})[name] = type
         end
 
-        def validates(name, validations, **)
+        def validates(name, **validations)
           (@validations ||= {})[name] = validations
         end
       end

@@ -7,22 +7,25 @@ module Decidim
         def configure_form(form)
           form.attribute(name, String)
           validations = {
-            presence: required? && {
-              message: proc do |_object, _data|
-                label(:required)
-              end
-            },
             format: {
               with: /\A\d{4}-\d{2}-\d{2}\z/,
+              allow_blank: !required?,
               message: proc do
                 label(:bad_format)
               end
             }
           }
+          validations[:presence] = {
+            message: proc do |_object, _data|
+              label(:required)
+            end
+          } if required?
           apply_form_validations(form, validations)
         end
 
         def validate(value, _data, errors)
+          return if value.blank? && !required?
+
           date_value = nil
           begin
             date_value = Date.strptime(value, "%Y-%m-%d")
@@ -39,6 +42,12 @@ module Decidim
           form[name] = data[name] if data[name].present?
         end
 
+        def sanitized_value(raw_value)
+          return nil if raw_value.blank?
+
+          raw_value
+        end
+
         def form_tag(form_tag)
           options = {
             label: label(:label),
@@ -46,7 +55,15 @@ module Decidim
             label_options: { class: label_class_name },
             class: class_name
           }
-          options[:value] = Date.strptime(form_tag.object[name], "%Y-%m-%d") if form_tag.object[name].present?
+          raw = form_tag.object[name]
+          form_tag.object.public_send("#{name}=", nil) if raw.blank?
+          if raw.present?
+            begin
+              options[:value] = Date.strptime(raw.to_s, "%Y-%m-%d")
+            rescue Date::Error
+              # ignore invalid stored values when re-rendering the form
+            end
+          end
           form_tag.date_field(
             name,
             options

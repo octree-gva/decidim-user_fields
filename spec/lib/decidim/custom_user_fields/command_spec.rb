@@ -7,21 +7,26 @@ describe Decidim::CustomUserFields::Command do
     Class.new do
       prepend Decidim::CustomUserFields::Command
 
-      attr_reader :form
+      attr_reader :form, :current_user
 
-      def initialize(form)
+      def initialize(form, current_user: nil)
         @form = form
+        @current_user = current_user
       end
     end
   end
 
   describe "#extended_data" do
-    it "merges only active field set values into user extended_data" do
-      with_registration_field_sets do
+    it "merges only active customization values into user extended_data" do
+      with_customizations do
         organization = create(:organization)
-        register_test_field_set(:default) { |set| set.add_field(:foo, type: :dummy) }
-        register_test_field_set(:other) { |set| set.add_field(:bar, type: :dummy) }
-        activate_field_set_for(organization, :default)
+        register_test_customization(:default) do |customization|
+          customization.registration_fields { |set| set.add_field(:foo, type: :dummy) }
+        end
+        register_test_customization(:other) do |customization|
+          customization.registration_fields { |set| set.add_field(:bar, type: :dummy) }
+        end
+        enable_customization_for(organization, :default)
 
         form = instance_double("Form", current_organization: organization, foo: "bar", bar: "ignored")
         allow(form).to receive(:[]).with(:foo).and_return("bar")
@@ -37,12 +42,48 @@ describe Decidim::CustomUserFields::Command do
     end
   end
 
+  describe "#update_personal_data" do
+    it "updates profile fields and merges extended_data from active customizations" do
+      with_customizations do
+        organization = create(:organization)
+        user = create(:user, organization:, extended_data: { existing: "keep" })
+        register_test_customization(:default) do |customization|
+          customization.registration_fields { |set| set.add_field(:foo, type: :dummy) }
+        end
+        enable_customization_for(organization, :default)
+
+        form = instance_double(
+          "Form",
+          current_organization: organization,
+          locale: "en",
+          name: "New Name",
+          nickname: "newnick",
+          email: "new@example.org",
+          personal_url: "https://example.org",
+          about: "About me",
+          foo: "bar"
+        )
+        allow(form).to receive(:[]).with(:foo).and_return("bar")
+
+        cmd = command_class.new(form, current_user: user)
+        cmd.instance_variable_set(:@form, form)
+
+        cmd.send(:update_personal_data)
+
+        expect(user.name).to eq("New Name")
+        expect(user.extended_data).to include("existing" => "keep", "foo" => "bar")
+      end
+    end
+  end
+
   describe "#create_user" do
     it "calls Decidim::User.create! with extended_data in the payload" do
-      with_registration_field_sets do
+      with_customizations do
         organization = create(:organization)
-        register_test_field_set(:default) { |set| set.add_field(:foo, type: :dummy) }
-        activate_field_set_for(organization, :default)
+        register_test_customization(:default) do |customization|
+          customization.registration_fields { |set| set.add_field(:foo, type: :dummy) }
+        end
+        enable_customization_for(organization, :default)
 
         form = instance_double(
           "Form",

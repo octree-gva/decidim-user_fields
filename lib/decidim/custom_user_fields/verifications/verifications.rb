@@ -14,16 +14,19 @@ module Decidim
           @verification_classes ||= []
         end
 
-        def workflow_field_sets
-          @workflow_field_sets ||= {}
+        def workflow_customizations
+          @workflow_customizations ||= {}
         end
 
-        def workflow_field_set(handler_name)
-          workflow_field_sets[handler_name.to_s]
+        def workflow_customization(handler_name)
+          workflow_customizations[handler_name.to_s]
+        end
+
+        def workflow_handlers_for(customization_name)
+          workflow_customizations.select { |_, name| name.to_s == customization_name.to_s }.keys
         end
 
         def create_verification_class(class_name)
-          # Dynamically create the class within the namespace
           klass = Class.new(Decidim::CustomUserFields::Verifications::VerificationForm)
           const_set(class_name, klass)
           verification_classes.push klass
@@ -31,11 +34,14 @@ module Decidim
         end
       end
 
-      def self.register(verification_name)
-        builder = Decidim::CustomUserFields::Verifications::Builder.new(verification_name)
+      def self.register(verification_name, customization: nil)
+        builder = Decidim::CustomUserFields::Verifications::Builder.new(verification_name, customization: customization)
         yield builder
         builder.register_workflow!
-        workflow_field_sets[builder.handler_name] = builder.field_set if builder.field_set
+        if customization
+          workflow_customizations[builder.handler_name] = customization.to_sym
+          Customizations.find(customization)&.register_handler!(builder.handler_name)
+        end
       end
     end
   end

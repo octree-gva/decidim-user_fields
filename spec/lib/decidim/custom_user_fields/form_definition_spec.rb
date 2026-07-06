@@ -14,8 +14,8 @@ describe Decidim::CustomUserFields::FormDefinition do
           (@attributes ||= {})[name] = type
         end
 
-        def validates(name, validations, **options)
-          (@validations ||= []) << { name:, validations:, options: }
+        def validates(name, **validations)
+          (@validations ||= []) << { name:, validations: }
         end
       end
 
@@ -44,8 +44,10 @@ describe Decidim::CustomUserFields::FormDefinition do
   end
 
   it "adds configured custom fields at include-time" do
-    with_registration_field_sets do
-      register_test_field_set(:default) { |set| set.add_field(:foo, type: :text, required: true) }
+    with_customizations do
+      register_test_customization(:default) do |customization|
+        customization.registration_fields { |set| set.add_field(:foo, type: :text, required: true) }
+      end
 
       klass = Class.new(form_class) do
         include Decidim::CustomUserFields::FormDefinition
@@ -56,20 +58,72 @@ describe Decidim::CustomUserFields::FormDefinition do
     end
   end
 
-  it "maps model extended_data into the form" do
-    with_registration_field_sets do
-      register_test_field_set(:default) { |set| set.add_field(:foo, type: :text, required: true) }
+  it "maps model extended_data into the form for active fields only" do
+    with_customizations do
+      organization = create(:organization)
+      register_test_customization(:default) do |customization|
+        customization.registration_fields { |set| set.add_field(:foo, type: :text, required: true) }
+      end
+      enable_customization_for(organization, :default)
 
       klass = Class.new(form_class) do
         include Decidim::CustomUserFields::FormDefinition
       end
 
       model = Struct.new(:extended_data).new({ foo: "  bar " })
-      form = klass.new
+      form = klass.new(organization:)
+      allow(form).to receive(:current_organization).and_return(organization)
 
       form.map_model(model)
 
       expect(form[:foo]).to eq("bar")
+    end
+  end
+
+  it "ignores missing extended_data keys for active fields" do
+    with_customizations do
+      organization = create(:organization)
+      register_test_customization(:default) do |customization|
+        customization.registration_fields { |set| set.add_field(:foo, type: :text, required: true) }
+      end
+      enable_customization_for(organization, :default)
+
+      klass = Class.new(form_class) do
+        include Decidim::CustomUserFields::FormDefinition
+      end
+
+      model = Struct.new(:extended_data).new(nil)
+      form = klass.new(organization:)
+      allow(form).to receive(:current_organization).and_return(organization)
+
+      expect { form.map_model(model) }.not_to raise_error
+      expect(form[:foo]).to be_nil
+    end
+  end
+
+  it "does not map fields from disabled customizations" do
+    with_customizations do
+      organization = create(:organization)
+      register_test_customization(:default) do |customization|
+        customization.registration_fields { |set| set.add_field(:foo, type: :text) }
+      end
+      register_test_customization(:other) do |customization|
+        customization.registration_fields { |set| set.add_field(:bar, type: :text) }
+      end
+      enable_customization_for(organization, :default)
+
+      klass = Class.new(form_class) do
+        include Decidim::CustomUserFields::FormDefinition
+      end
+
+      model = Struct.new(:extended_data).new({ foo: "yes", bar: "no" })
+      form = klass.new(organization:)
+      allow(form).to receive(:current_organization).and_return(organization)
+
+      form.map_model(model)
+
+      expect(form[:foo]).to eq("yes")
+      expect(form[:bar]).to be_nil
     end
   end
 end

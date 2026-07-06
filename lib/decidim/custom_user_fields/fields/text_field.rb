@@ -6,9 +6,8 @@ module Decidim
       class TextField < GenericField
         def configure_form(form)
           form.attribute(name, String)
-          validations = {
-            presence: required?
-          }
+          validations = {}
+          validations[:presence] = true if required?
           if options[:values_in]
             validations[:inclusion] = {
               in: options[:values_in],

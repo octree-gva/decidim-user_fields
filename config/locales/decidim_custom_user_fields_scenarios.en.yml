@@ -1,0 +1,44 @@
+en:
+  decidim:
+    authorization_handlers:
+      twelve_plus:
+        name: "12 plus"
+        explanation: "Verify you are at least 12 years old"
+      sixteen_plus:
+        name: "16 plus"
+        explanation: "Verify you are at least 16 years old"
+      eighteen_plus:
+        name: "18 plus"
+        explanation: "Verify you are at least 18 years old"
+      location_validated:
+        name: "Location validated"
+        explanation: "Validate your location details"
+      association_only:
+        name: "Association only"
+        explanation: "Only for association representatives"
+    custom_user_fields:
+      customizations:
+        neuchatel: "Neuchâtel"
+        lausanne: "Lausanne"
+        gland: "Gland"
+      extended_data:
+        birthdate:
+          label: "Birthdate"
+        represent_association:
+          label: "I represent an association"
+      twelve_plus:
+        birthdate:
+          label: "Birthdate"
+      sixteen_plus:
+        birthdate:
+          label: "Birthdate"
+      eighteen_plus:
+        birthdate:
+          label: "Birthdate"
+      location_validated:
+        birthdate:
+          label: "Birthdate (DD.MM.YYYY)"
+        postal_code:
+          label: "Postal code"
+        full_name:
+          label: "Full name"

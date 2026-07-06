@@ -44,7 +44,8 @@ module Decidim
         RegistrationFields.active_registration_fields(org).each do |field_def|
           custom_data[field_def.name] = @form[field_def.name]
         end
-        @extended_data ||= (@user&.extended_data || {}).merge(custom_data)
+        source_user = try(:current_user) || @user
+        @extended_data ||= (source_user&.extended_data || {}).merge(custom_data)
       end
     end
   end

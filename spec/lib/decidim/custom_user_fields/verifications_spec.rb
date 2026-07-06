@@ -5,10 +5,13 @@ require "spec_helper"
 describe Decidim::CustomUserFields::Verifications do
   around do |example|
     original_classes = described_class.verification_classes.dup
+    original_customizations = described_class.workflow_customizations.dup
     described_class.verification_classes.clear
+    described_class.workflow_customizations.clear
     example.run
   ensure
     described_class.verification_classes.replace(original_classes)
+    described_class.workflow_customizations.replace(original_customizations)
   end
 
   describe ".create_verification_class" do
@@ -51,20 +54,23 @@ describe Decidim::CustomUserFields::Verifications do
       described_class.send(:remove_const, klass_name) if described_class.const_defined?(klass_name)
     end
 
-    it "stores workflow field_set when declared" do
+    it "stores workflow customization when declared" do
       handler_name = "bound_verification#{SecureRandom.hex(4)}"
       klass_name = handler_name.camelize
 
       allow(Decidim::Verifications).to receive(:register_workflow)
 
-      described_class.register(handler_name) do |builder|
-        builder.field_set(:community)
-        builder.add_field(:test_field, type: :text)
-      end
+      with_customizations do
+        register_test_customization(:community)
 
-      expect(described_class.workflow_field_set(handler_name)).to eq(:community)
+        described_class.register(handler_name, customization: :community) do |builder|
+          builder.add_field(:test_field, type: :text)
+        end
+
+        expect(described_class.workflow_customization(handler_name)).to eq(:community)
+      end
     ensure
-      described_class.workflow_field_sets.delete(handler_name)
+      described_class.workflow_customizations.delete(handler_name)
       described_class.send(:remove_const, klass_name) if described_class.const_defined?(klass_name)
     end
   end

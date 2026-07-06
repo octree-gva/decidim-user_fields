@@ -6,24 +6,35 @@ require "decidim/custom_user_fields/fields/date_field"
 require "decidim/custom_user_fields/fields/text_area_field"
 require "decidim/custom_user_fields/fields/text_field"
 require "decidim/custom_user_fields/fields/extra_field_ref_field"
+require "decidim/custom_user_fields/fields/boolean_field"
 require "decidim/custom_user_fields/field_definition"
 
 require "decidim/custom_user_fields/helpers/application_helper"
 require "decidim/custom_user_fields/custom_user_fields"
-require "decidim/custom_user_fields/registration_field_sets"
+require "decidim/custom_user_fields/version"
+require "decidim/custom_user_fields/customizations"
 require "decidim/custom_user_fields/registration_fields"
-require "decidim/custom_user_fields/authorization_field_set_compatibility"
-require "decidim/custom_user_fields/toggle/authorizations_field_set_validation"
+require "decidim/custom_user_fields/authorization_customization_compatibility"
+require "decidim/custom_user_fields/upgrade/migrate_toggle_config"
+require "decidim/custom_user_fields/toggle/authorizations_customization_validation"
 require "decidim/custom_user_fields/overrides/command"
+require "decidim/custom_user_fields/overrides/omniauth_command"
+require "decidim/custom_user_fields/overrides/invitations_controller"
 require "decidim/custom_user_fields/overrides/form_definition"
 
 require "decidim/custom_user_fields/engine"
+
+if defined?(Rails) && (Rails.env.development? || ENV["ZITADEL_OIDC_ENABLED"].present?)
+  require "decidim/custom_user_fields/dev/scenario_customizations"
+  require "decidim/custom_user_fields/dev/secrets_patcher"
+  require "decidim/custom_user_fields/dev/local_oidc_seeder"
+end
 
 require "decidim/custom_user_fields/verifications/builder"
 require "decidim/custom_user_fields/verifications/verifications"
 
 Decidim.register_global_engine(
-  :decidim_custom_user_fields, # this is the name of the global method to access engine routes
+  :decidim_custom_user_fields,
   Decidim::CustomUserFields::Engine,
   at: "/decidim_custom_user_fields"
 )

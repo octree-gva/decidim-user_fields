@@ -98,13 +98,13 @@ module Decidim
           return if validations.blank?
 
           field_name = name
-          options = {}
+          validation_options = validations.dup
           if registration_form?(form)
-            options[:if] = lambda { |record|
+            validation_options[:if] = lambda { |record|
               record.active_custom_field_names.include?(field_name)
             }
           end
-          form.validates(name, validations, **options)
+          form.validates(name, **validation_options)
         end
 
         def registration_form?(form)

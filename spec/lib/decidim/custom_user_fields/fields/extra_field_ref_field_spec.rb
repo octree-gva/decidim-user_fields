@@ -18,16 +18,18 @@ describe Decidim::CustomUserFields::Fields::ExtraFieldRefField do
   end
 
   describe "#configure_form" do
-    it "raises when field_set is missing" do
+    it "raises when customization is missing" do
       expect do
         field.configure_form(form_class)
-      end.to raise_error(/field_set must be set/)
+      end.to raise_error(/customization must be set/)
     end
 
-    it "raises when referenced field is missing from the field set" do
-      with_registration_field_sets do
-        Decidim::CustomUserFields.register_field_set(:community) { |set| set.add_field(:other, type: :dummy) }
-        field.field_set_name = :community
+    it "raises when referenced field is missing from the customization" do
+      with_customizations do
+        register_test_customization(:community) do |customization|
+          customization.registration_fields { |set| set.add_field(:other, type: :dummy) }
+        end
+        field.customization_name = :community
 
         expect do
           field.configure_form(form_class)
@@ -36,9 +38,11 @@ describe Decidim::CustomUserFields::Fields::ExtraFieldRefField do
     end
 
     it "builds a reference definition and configures it" do
-      with_registration_field_sets do
-        Decidim::CustomUserFields.register_field_set(:community) { |set| set.add_field(:ref_me, type: :dummy) }
-        field.field_set_name = :community
+      with_customizations do
+        register_test_customization(:community) do |customization|
+          customization.registration_fields { |set| set.add_field(:ref_me, type: :dummy) }
+        end
+        field.customization_name = :community
         field.configure_form(form_class)
 
         expect(field.reference).to be_a(Decidim::CustomUserFields::FieldDefinition)
@@ -87,9 +91,11 @@ describe Decidim::CustomUserFields::Fields::ExtraFieldRefField do
       let(:options) { { hide_if_value: true } }
 
       it "renders a hidden field wrapper" do
-        with_registration_field_sets do
-          Decidim::CustomUserFields.register_field_set(:community) { |set| set.add_field(:ref_me, type: :dummy) }
-          field.field_set_name = :community
+        with_customizations do
+          register_test_customization(:community) do |customization|
+            customization.registration_fields { |set| set.add_field(:ref_me, type: :dummy) }
+          end
+          field.customization_name = :community
           field.configure_form(form_class)
 
           html = field.form_tag(builder)
@@ -99,10 +105,40 @@ describe Decidim::CustomUserFields::Fields::ExtraFieldRefField do
       end
     end
 
+    it "handles missing extended_data on the user" do
+      with_customizations do
+        register_test_customization(:community) do |customization|
+          customization.registration_fields { |set| set.add_field(:ref_me, type: :dummy) }
+        end
+        field.customization_name = :community
+        field.configure_form(form_class)
+
+        user_without_data = create(:user, extended_data: nil)
+        form_object = Class.new do
+          attr_reader :user
+
+          def initialize(user)
+            @user = user
+            @data = {}
+          end
+
+          def []=(_key, _value); end
+
+          def [](_key); end
+        end.new(user_without_data)
+
+        builder = instance_double("FormBuilder", object: form_object, hidden_field: "<input />")
+
+        expect { field.form_tag(builder) }.not_to raise_error
+      end
+    end
+
     it "restores i18n context after rendering" do
-      with_registration_field_sets do
-        Decidim::CustomUserFields.register_field_set(:community) { |set| set.add_field(:ref_me, type: :dummy) }
-        field.field_set_name = :community
+      with_customizations do
+        register_test_customization(:community) do |customization|
+          customization.registration_fields { |set| set.add_field(:ref_me, type: :dummy) }
+        end
+        field.customization_name = :community
         field.configure_form(form_class)
         old_context = field.reference.i18n_context
 

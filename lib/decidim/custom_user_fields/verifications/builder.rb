@@ -4,13 +4,13 @@ module Decidim
   module CustomUserFields
     module Verifications
       class Builder
-        attr_reader :name, :field_set
+        attr_reader :name, :customization
         attr_accessor :fields, :renewable, :time_between_renewals
 
-        def initialize(name)
+        def initialize(name, customization: nil)
           @name = name.to_s
+          @customization = customization&.to_sym
           @fields = []
-          @field_set = nil
           @ephemerable = false
           @renewable = false
           @time_between_renewals = nil
@@ -25,16 +25,10 @@ module Decidim
           @renewable
         end
 
-        def field_set(name = nil)
-          return @field_set if name.nil?
-
-          @field_set = name.to_sym
-        end
-
         def add_field(field_name, field_definition)
           field_def = FieldDefinition.new(field_name, field_definition, handler_name)
           if field_def.type == :extra_field_ref
-            field_def.field.field_set_name = @field_set
+            field_def.field.customization_name = @customization
           end
           fields.push(field_def)
         end
@@ -56,7 +50,7 @@ module Decidim
         end
 
         def register_workflow!
-          validate_field_set_requirements!
+          validate_extra_field_ref_requirements!
 
           Decidim::Verifications.register_workflow(handler_name.to_sym) do |workflow|
             workflow.form = "Decidim::CustomUserFields::Verifications::#{klass_name}"
@@ -75,15 +69,15 @@ module Decidim
 
         private
 
-        def validate_field_set_requirements!
+        def validate_extra_field_ref_requirements!
           uses_extra_field_ref = fields.any? { |field| field.type == :extra_field_ref }
-          if uses_extra_field_ref && field_set.nil?
+          if uses_extra_field_ref && customization.nil?
             raise Decidim::CustomUserFields::Error,
-                  "field_set must be set on #{name} when using extra_field_ref fields"
+                  "authorization #{name} must be registered inside a customization when using extra_field_ref fields"
           end
 
           fields.each do |field|
-            field.field.validate_field_set_reference! if field.type == :extra_field_ref
+            field.field.validate_customization_reference! if field.type == :extra_field_ref
           end
         end
       end

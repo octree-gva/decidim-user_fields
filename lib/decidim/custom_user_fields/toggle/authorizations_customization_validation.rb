@@ -3,23 +3,23 @@
 module Decidim
   module CustomUserFields
     module Toggle
-      module AuthorizationsFieldSetValidation
+      module AuthorizationsCustomizationValidation
         extend ActiveSupport::Concern
 
         included do
-          validate :authorizations_match_active_field_set
+          validate :authorizations_match_enabled_customizations
         end
 
         private
 
-        def authorizations_match_active_field_set
+        def authorizations_match_enabled_customizations
           org = context&.dig(:current_organization) || try(:current_organization)
           return unless org
 
-          field_set_key = Decidim::Toggle.config_for(org, :custom_user_fields).active_field_set.to_s
-          incompatible = AuthorizationFieldSetCompatibility.incompatible_with_field_set(
+          enabled = RegistrationFields.enabled_customization_names(org)
+          incompatible = AuthorizationCustomizationCompatibility.incompatible_with_enabled_customizations(
             clean_available_authorizations,
-            field_set_key
+            enabled
           )
           return if incompatible.blank?
 
@@ -27,7 +27,7 @@ module Decidim
             :available_authorizations,
             I18n.t(
               "incompatible_authorizations",
-              scope: "decidim.custom_user_fields.system.field_sets",
+              scope: "decidim.custom_user_fields.system.customizations",
               authorizations: incompatible.join(", ")
             )
           )

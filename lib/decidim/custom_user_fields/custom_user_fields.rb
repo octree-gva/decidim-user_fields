@@ -16,8 +16,8 @@ module Decidim
       false
     end
 
-    def self.register_field_set(name, &block)
-      RegistrationFieldSets.register_field_set(name, &block)
+    def self.register_customization(name, &block)
+      Customizations.register(name, &block)
     end
 
     class Error < StandardError; end

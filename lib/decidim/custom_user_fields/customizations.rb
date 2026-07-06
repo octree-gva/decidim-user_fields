@@ -1,18 +1,19 @@
 # frozen_string_literal: true
 
-require "decidim/custom_user_fields/registration_field_sets/registration_field_set"
-require "decidim/custom_user_fields/registration_field_sets/builder"
+require "decidim/custom_user_fields/customizations/customization"
+require "decidim/custom_user_fields/customizations/builder"
 
 module Decidim
   module CustomUserFields
-    module RegistrationFieldSets
+    module Customizations
       class << self
-        def register_field_set(name, &block)
-          field_set = RegistrationFieldSet.new(name)
-          builder = Builder.new(field_set)
+        def register(name, &block)
+          customization = Customization.new(name)
+          registry[name.to_sym] = customization
+          builder = Builder.new(customization)
           yield builder
-          registry[name.to_sym] = field_set
-          field_set
+          Decidim::CustomUserFields::Admin::CustomizationsConfigForm.register_toggle_attribute!(name)
+          customization
         end
 
         def find(name)

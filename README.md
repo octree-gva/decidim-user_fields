@@ -52,37 +52,117 @@ rails decidim_toggle:install:migrations
 rails db:migrate
 ```
 
-## Registration field sets (per organization)
+## Customizations (per organization)
 
-Register named field sets in an initializer. Sysadmins pick one per organization in **System → Organizations → Registration fields** (via decidim-toggle).
+Register named customizations in an initializer. Each customization bundles registration/profile fields and authorization workflows. Sysadmins enable them per organization in **System → Organizations → User field customizations** (via decidim-toggle).
 
 ```ruby
-Decidim::CustomUserFields.register_field_set :community do |set|
-  set.add_field :social_media_url, type: :text, required: false
+Decidim::CustomUserFields.register_customization :community do |customization|
+  customization.registration_fields do |set|
+    set.add_field :social_media_url, type: :text, required: false
+  end
 end
 
-Decidim::CustomUserFields.register_field_set :ngos do |set|
-  set.add_field :organization_name, type: :text, required: true
-  set.add_field :organization_email, type: :text, required: true
+Decidim::CustomUserFields.register_customization :ngos do |customization|
+  customization.registration_fields do |set|
+    set.add_field :organization_name, type: :text, required: true
+    set.add_field :organization_email, type: :text, required: true
+  end
+
+  customization.authorization "NgoVerify" do |config|
+    config.add_field :organization_name, type: :extra_field_ref, ref: :organization_name, required: true
+  end
 end
 ```
 
-Field set labels for the admin radio group: `decidim.custom_user_fields.field_sets.<name>`.
+Customization labels for the admin toggles: `decidim.custom_user_fields.customizations.<name>`.
+
+Disabling a customization is blocked while the organization still has that customization's authorization workflows enabled.
+
+## Upgrading from field sets to customizations
+
+User values in `extended_data` and existing authorization grants are unchanged when field and handler names stay the same.
+
+Toggle config migrates from `{ "active_field_set": "default" }` to `{ "default_enabled": true }`.
+
+On deploy, `bin/rails decidim:upgrade` (or `decidim:update`) runs `decidim_custom_user_fields:upgrade:migrate_toggle_config` automatically.
+
+Until that runs, the module still reads `active_field_set` when no `{name}_enabled` keys exist.
+
+Manual run:
+
+```bash
+bin/rails decidim_custom_user_fields:upgrade:migrate_toggle_config
+DRY_RUN=1 bin/rails decidim_custom_user_fields:upgrade:migrate_toggle_config
+```
+
+Refactor your initializer from `register_field_set` to `register_customization`, keeping the same customization name as the former field set (e.g. `:default`).
+
+## Local testing with Zitadel (OIDC)
+
+Docker Compose ships a Zitadel IdP, MailCatcher, and seed scripts for manual end-to-end testing (OIDC login → custom field completion → authorizations).
+
+First-time setup (generates the dummy app if needed, ~5–10 min):
+
+```bash
+./bin/dev-local-setup
+```
+
+Then start Decidim:
+
+```bash
+docker compose --profile web up web
+```
+
+| URL | Purpose |
+|-----|---------|
+| http://localhost:3000 | Decidim dummy app |
+| http://localhost:8080 | Zitadel console |
+| http://localhost:1080 | MailCatcher (emails) |
+
+Default credentials:
+
+- **Zitadel admin:** `admin@zitadel.localhost` / `Password1!`
+- **Decidim admin:** `admin@example.org` / `decidim123456789`
+
+The setup script:
+
+1. Starts Zitadel + Postgres + MailCatcher
+2. Creates the OIDC app (`docker/zitadel/oidc.env`)
+3. Seeds the demo org with Zitadel as `openid_connect` provider
+4. Enables the **Gland** scenario customization (`DEV_CUSTOMIZATION=gland` by default)
+
+Use a Zitadel user (create one in the console) to sign in via **Zitadel** on the Decidim login page. Missing custom fields appear on the OIDC completion form.
+
+Individual steps:
+
+```bash
+docker compose up -d zitadel zitadel-db mailcatcher user-fields-pg
+./bin/setup-zitadel-oidc          # writes docker/zitadel/oidc.env
+cd spec/decidim_dummy_app
+bundle exec rake decidim_custom_user_fields:dev:prepare_secrets
+bundle exec rake decidim_custom_user_fields:dev:seed
+```
+
+Reset Zitadel data: `docker compose down -v` (re-runs first-instance bootstrap).
 
 ## How to add a custom user field.
 Create an initializer `config/initializers/custom_user_fields.rb`
 ```ruby
-Decidim::CustomUserFields.register_field_set :default do |set|
-  set.add_field :birthdate, type: :date, required: true
-  set.add_field :address, type: :textarea, required: false, rows: 10
-  set.add_field :purpose, type: :text, required: false
+Decidim::CustomUserFields.register_customization :default do |customization|
+  customization.registration_fields do |set|
+    set.add_field :birthdate, type: :date, required: true
+    set.add_field :address, type: :textarea, required: false, rows: 10
+    set.add_field :purpose, type: :text, required: false
+  end
 end
 ```
 ## Renewable verifications
-To set an authorization as renewable, you can use `renewable!(time_between_renew)`:
+To set an authorization as renewable, register it inside a customization and use `renewable!(time_between_renew)`:
 ```
-Rails.application.config.after_initialize  do
-  Decidim::CustomUserFields::Verifications.register("PB2024") do |config|
+Decidim::CustomUserFields.register_customization :pb2024 do |customization|
+  customization.registration_fields { |set| set.add_field :foo, type: :text }
+  customization.authorization "PB2024" do |config|
     config.renewable!(2.days) # Will need to renew authorization after 2 days.
   end
 end
@@ -92,10 +172,11 @@ This will have no effect under < 30, or without the `decidim-ephemerable` gem.
 
 
 ## Ephemerable verifications
-To set an authorization as ephemerable, you can use `ephemerable!`:
+To set an authorization as ephemerable, register it inside a customization and use `ephemerable!`:
 ```
-Rails.application.config.after_initialize  do
-  Decidim::CustomUserFields::Verifications.register("PB2024") do |config|
+Decidim::CustomUserFields.register_customization :pb2024 do |customization|
+  customization.registration_fields { |set| set.add_field :foo, type: :text }
+  customization.authorization "PB2024" do |config|
     config.ephemerable!
     config.renewable!(1.day) # The ephemerable will be valid for a day
   end
@@ -174,16 +255,13 @@ fr:
 # Create an authorization with custom fields
 
 ```ruby
-# Registration / profile fields
-Decidim::CustomUserFields.register_field_set :pb2024_profile do |set|
-  set.add_field :first_name, type: :text, required: false
-  set.add_field :last_name, type: :text, required: false
-end
+Decidim::CustomUserFields.register_customization :pb2024 do |customization|
+  customization.registration_fields do |set|
+    set.add_field :first_name, type: :text, required: false
+    set.add_field :last_name, type: :text, required: false
+  end
 
-# Fields for the verification PB2024
-Rails.application.config.after_initialize do
-  Decidim::CustomUserFields::Verifications.register("PB2024") do |config|
-    config.field_set :pb2024_profile
+  customization.authorization "PB2024" do |config|
     config.ephemerable!
     config.add_field :first_name, type: :extra_field_ref, required: true, skip_hashing: true, hide_if_value: true
     config.add_field :last_name, type: :extra_field_ref, required: true, skip_hashing: true, hide_if_value: true
@@ -191,7 +269,6 @@ Rails.application.config.after_initialize do
     config.add_field :postal_code, type: :text, required: true, format: /\A[\-0-9]*\z/, values_in: ["2000", "2001", "2002"]
   end
 end
-
 ```
 
 Then, add locales for this flow: 

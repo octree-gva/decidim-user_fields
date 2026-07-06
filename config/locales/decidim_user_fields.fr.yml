@@ -2,10 +2,10 @@ fr:
   decidim:
     custom_user_fields:
       system:
-        registration_fields_tab: "Champs d'inscription"
-        field_sets:
-          none: "Aucun"
+        customizations_tab: "Personnalisations des champs utilisateur"
+        customizations:
           incompatible_authorizations: "Incompatible avec les autorisations activées : %{authorizations}"
+          unknown_customization: "Personnalisation inconnue : %{name}"
       date:
         required: "Cette date est obligatoire"
         bad_format: "Cette date est mal formatée"
@@ -19,4 +19,4 @@ fr:
         too_short: "Doit être plus de %{count} caractères"
       text:
         bad_values: "Cette valeur n'est pas autorisée"
-        bad_format: "Vérifiez à nouveau ce format" 
+        bad_format: "Vérifiez à nouveau ce format"

@@ -39,9 +39,15 @@ module Decidim
           @field = Fields::DateField.new(self, kwargs)
         when :extra_field_ref
           @field = Fields::ExtraFieldRefField.new(self, kwargs)
+        when :boolean
+          @field = Fields::BooleanField.new(self, kwargs)
         else
           raise Error, "field type #{type} is not supported"
         end
+      end
+
+      def deep_dup
+        self.class.new(name, { type: type }.merge(field.options), handler_name)
       end
     end
   end

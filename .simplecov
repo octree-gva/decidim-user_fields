@@ -2,7 +2,7 @@
 
 if ENV["SIMPLECOV"]
   SimpleCov.start do
-    minimum_coverage 80
+    minimum_coverage 90
     track_files "**/*.rb"
 
     # We ignore some of the files because they are never tested
@@ -10,7 +10,7 @@ if ENV["SIMPLECOV"]
     add_filter "/db/"
     add_filter "/vendor/"
     add_filter "/spec/"
-    add_filter "/test/"
+    add_filter "/lib/tasks/"
     add_filter %r{^/decidim-[^/]*/lib/decidim/[^/]*/engine.rb}
     add_filter %r{^/decidim-[^/]*/lib/decidim/[^/]*/admin-engine.rb}
     add_filter %r{^/decidim-[^/]*/lib/decidim/[^/]*/component.rb}

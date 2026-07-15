@@ -24,7 +24,6 @@ module Decidim
           locale: form.current_locale,
           extended_data:
         }
-        user_payload.email_on_notification = Decidim::CustomUserFields.default_email_on_notification if Decidim.version < "0.27"
         @user = User.create!(user_payload)
       end
 

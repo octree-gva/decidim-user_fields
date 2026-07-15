@@ -16,7 +16,7 @@ describe "Custom user fields registration", :custom_user_fields_scenarios, type:
     it "shows an optional birthdate field" do
       visit decidim.new_user_registration_path
 
-      expect_custom_date_field("registration_user_birthdate", label: "Birthdate")
+      expect_custom_date_field("registration_user_neuchatel_birthdate", label: "Birthdate")
     end
 
     it "registers without birthdate" do
@@ -26,18 +26,18 @@ describe "Custom user fields registration", :custom_user_fields_scenarios, type:
 
       expect(page).to have_content("confirmation link")
       user = Decidim::User.find_by(email: "neuchatel.optional@example.org")
-      expect(user.extended_data["birthdate"]).to be_blank
+      expect(user.extended_data["neuchatel_birthdate"]).to be_blank
     end
 
     it "registers with birthdate" do
       visit decidim.new_user_registration_path
       fill_registration_form_base(email: "neuchatel.with-date@example.org")
-      fill_custom_date_field("registration_user_birthdate", age: 20)
+      fill_custom_date_field("registration_user_neuchatel_birthdate", age: 20)
       submit_registration_form
 
       expect(page).to have_content("confirmation link")
       user = Decidim::User.find_by(email: "neuchatel.with-date@example.org")
-      expect(user.extended_data["birthdate"]).to eq(birthdate_for_age(20))
+      expect(user.extended_data["neuchatel_birthdate"]).to eq(birthdate_for_age(20))
     end
   end
 
@@ -56,7 +56,7 @@ describe "Custom user fields registration", :custom_user_fields_scenarios, type:
 
     it "requires the association boolean on registration" do
       visit decidim.new_user_registration_path
-      expect(page).to have_field("registration_user_represent_association")
+      expect(page).to have_field("registration_user_gland_represent_association")
 
       fill_registration_form_base(email: "gland.missing@example.org")
       submit_registration_form
@@ -67,12 +67,12 @@ describe "Custom user fields registration", :custom_user_fields_scenarios, type:
     it "registers when the association boolean is checked" do
       visit decidim.new_user_registration_path
       fill_registration_form_base(email: "gland.ok@example.org")
-      check "registration_user_represent_association"
+      check "registration_user_gland_represent_association"
       submit_registration_form
 
       expect(page).to have_content("confirmation link")
       user = Decidim::User.find_by(email: "gland.ok@example.org")
-      expect(user.extended_data["represent_association"]).to be(true)
+      expect(user.extended_data["gland_represent_association"]).to be(true)
     end
   end
 end

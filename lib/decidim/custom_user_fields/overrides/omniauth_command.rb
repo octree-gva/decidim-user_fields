@@ -17,10 +17,14 @@ module Decidim
       def persist_omniauth_extended_data!
         return unless @user
 
-        data = omniauth_extended_data
-        return if data.blank?
+        params = omniauth_extended_data
+        return if params.blank?
 
-        @user.update!(extended_data: (@user.extended_data || {}).merge(data))
+        success, errors = ExtendedData.merge_into(@user, form.current_organization, params)
+        return if success
+
+        errors.each { |error| @user.errors.add(error.attribute, error.message) }
+        raise ActiveRecord::RecordInvalid, @user
       end
 
       def omniauth_extended_data

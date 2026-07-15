@@ -53,7 +53,7 @@ describe Decidim::CustomUserFields::FormDefinition do
         include Decidim::CustomUserFields::FormDefinition
       end
 
-      expect(klass.attributes).to include(foo: String)
+      expect(klass.attributes).to include(default_foo: String)
       expect(klass.validations).not_to be_empty
     end
   end
@@ -70,13 +70,13 @@ describe Decidim::CustomUserFields::FormDefinition do
         include Decidim::CustomUserFields::FormDefinition
       end
 
-      model = Struct.new(:extended_data).new({ foo: "  bar " })
+      model = Struct.new(:extended_data).new({ default_foo: "  bar " })
       form = klass.new(organization:)
       allow(form).to receive(:current_organization).and_return(organization)
 
       form.map_model(model)
 
-      expect(form[:foo]).to eq("bar")
+      expect(form[:default_foo]).to eq("bar")
     end
   end
 
@@ -97,7 +97,7 @@ describe Decidim::CustomUserFields::FormDefinition do
       allow(form).to receive(:current_organization).and_return(organization)
 
       expect { form.map_model(model) }.not_to raise_error
-      expect(form[:foo]).to be_nil
+      expect(form[:default_foo]).to be_nil
     end
   end
 
@@ -116,14 +116,14 @@ describe Decidim::CustomUserFields::FormDefinition do
         include Decidim::CustomUserFields::FormDefinition
       end
 
-      model = Struct.new(:extended_data).new({ foo: "yes", bar: "no" })
+      model = Struct.new(:extended_data).new({ default_foo: "yes", other_bar: "no" })
       form = klass.new(organization:)
       allow(form).to receive(:current_organization).and_return(organization)
 
       form.map_model(model)
 
-      expect(form[:foo]).to eq("yes")
-      expect(form[:bar]).to be_nil
+      expect(form[:default_foo]).to eq("yes")
+      expect(form[:other_bar]).to be_nil
     end
   end
 end

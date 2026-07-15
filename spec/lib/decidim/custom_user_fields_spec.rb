@@ -3,25 +3,6 @@
 require "spec_helper"
 
 describe Decidim::CustomUserFields do
-  describe ".default_email_on_notification" do
-    it "defaults to false" do
-      expect(described_class.default_email_on_notification).to be(false)
-    end
-  end
-
-  describe ".configure" do
-    it "yields the module configuration" do
-      original = described_class.default_email_on_notification
-      described_class.configure do |config|
-        config.default_email_on_notification = true
-      end
-
-      expect(described_class.default_email_on_notification).to be(true)
-    ensure
-      described_class.default_email_on_notification = original
-    end
-  end
-
   describe ".register_customization" do
     it "registers a customization with registration fields" do
       with_customizations do
@@ -33,7 +14,7 @@ describe Decidim::CustomUserFields do
 
         customization = Decidim::CustomUserFields::Customizations.find(:community)
         expect(customization.fields.length).to eq(1)
-        expect(customization.fields.first.name).to eq(:social_url)
+        expect(customization.fields.first.name).to eq(:community_social_url)
       end
     end
 

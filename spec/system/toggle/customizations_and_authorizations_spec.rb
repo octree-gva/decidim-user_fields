@@ -30,7 +30,7 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
     expect(organization.reload.available_authorizations).to include("sixteen_plus")
   end
 
-  it "blocks disabling a customization while its authorizations remain enabled" do
+  it "allows disabling a customization even when its authorizations remain enabled" do
     enable_customization_for(organization, :neuchatel)
     organization.update!(available_authorizations: %w(sixteen_plus))
 
@@ -39,7 +39,7 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
     uncheck "organization_neuchatel_enabled"
     click_on "Save"
 
-    expect(page).to have_content("Incompatible with enabled authorizations")
+    settings_updated_successfully!
     expect(organization.reload.available_authorizations).to include("sixteen_plus")
   end
 

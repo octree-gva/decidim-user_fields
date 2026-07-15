@@ -13,7 +13,7 @@ describe Decidim::CustomUserFields::Customizations do
         end
 
         expect(described_class.all.length).to eq(1)
-        expect(described_class.find(:community).fields.map(&:name)).to eq([:social_url])
+        expect(described_class.find(:community).fields.map(&:name)).to eq([:community_social_url])
       end
     end
 

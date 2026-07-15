@@ -28,16 +28,16 @@ describe Decidim::CustomUserFields::Command do
         end
         enable_customization_for(organization, :default)
 
-        form = instance_double("Form", current_organization: organization, foo: "bar", bar: "ignored")
-        allow(form).to receive(:[]).with(:foo).and_return("bar")
+        form = instance_double("Form", current_organization: organization)
+        allow(form).to receive(:[]).with(:default_foo).and_return("bar")
 
         cmd = command_class.new(form)
         cmd.instance_variable_set(:@user, create(:user, organization:, extended_data: { existing: 1 }))
 
         data = cmd.send(:extended_data)
 
-        expect(data).to include("existing" => 1, foo: "bar")
-        expect(data).not_to have_key(:bar)
+        expect(data).to include("existing" => 1, default_foo: "bar")
+        expect(data).not_to have_key(:other_bar)
       end
     end
   end
@@ -60,10 +60,9 @@ describe Decidim::CustomUserFields::Command do
           nickname: "newnick",
           email: "new@example.org",
           personal_url: "https://example.org",
-          about: "About me",
-          foo: "bar"
+          about: "About me"
         )
-        allow(form).to receive(:[]).with(:foo).and_return("bar")
+        allow(form).to receive(:[]).with(:default_foo).and_return("bar")
 
         cmd = command_class.new(form, current_user: user)
         cmd.instance_variable_set(:@form, form)
@@ -71,7 +70,7 @@ describe Decidim::CustomUserFields::Command do
         cmd.send(:update_personal_data)
 
         expect(user.name).to eq("New Name")
-        expect(user.extended_data).to include("existing" => "keep", "foo" => "bar")
+        expect(user.extended_data).to include("existing" => "keep", "default_foo" => "bar")
       end
     end
   end
@@ -94,14 +93,13 @@ describe Decidim::CustomUserFields::Command do
           current_organization: organization,
           tos_agreement: true,
           newsletter_at: nil,
-          current_locale: "en",
-          foo: nil
+          current_locale: "en"
         )
-        allow(form).to receive(:[]).with(:foo).and_return("bar")
+        allow(form).to receive(:[]).with(:default_foo).and_return("bar")
 
         cmd = command_class.new(form)
 
-        expect(Decidim::User).to receive(:create!).with(hash_including(extended_data: include(foo: "bar"))).and_call_original
+        expect(Decidim::User).to receive(:create!).with(hash_including(extended_data: include(default_foo: "bar"))).and_call_original
 
         cmd.send(:create_user)
       end

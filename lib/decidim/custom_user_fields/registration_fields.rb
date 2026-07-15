@@ -33,6 +33,9 @@ module Decidim
           return enabled if enabled.any?
 
           raw = raw_toggle_config(organization)
+          enabled = enabled_from_customization_flags(raw)
+          return enabled if enabled.any?
+
           return [] if legacy_config_superseded?(raw)
 
           legacy_name = raw[:"active_field_set"] || raw["active_field_set"]
@@ -62,11 +65,14 @@ module Decidim
         end
 
         def normalize_toggle_config(config)
-          if config.respond_to?(:to_config_hash)
-            config.to_config_hash.with_indifferent_access
-          else
-            config.with_indifferent_access
-          end
+          hash = if config.is_a?(Decidim::Toggle::ModuleConfigurationPresenter)
+                   config.to_config_hash
+                 elsif config.respond_to?(:to_config_hash)
+                   config.to_config_hash
+                 else
+                   config
+                 end
+          hash.with_indifferent_access
         end
 
         def raw_toggle_config(organization)

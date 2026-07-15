@@ -5,6 +5,10 @@ module Decidim
     module InvitationAcceptExtendedData
       def accept_resource
         custom_params = extract_custom_field_params
+        if (validation_errors = validate_custom_params(custom_params)).any?
+          return invalid_invitation_resource(validation_errors)
+        end
+
         resource = super
         return resource unless resource.valid? && resource.invitation_accepted?
 
@@ -26,21 +30,45 @@ module Decidim
       def extract_custom_field_params
         return {} unless params[:user]
 
+        user_params = params[:user].to_unsafe_h.with_indifferent_access if params[:user].respond_to?(:to_unsafe_h)
+        user_params ||= params[:user].to_h.with_indifferent_access
         custom_keys = RegistrationFields.all_registration_fields.map { |field| field.name.to_s }
-        params[:user].slice(*custom_keys).tap do
-          custom_keys.each { |key| params[:user].delete(key) }
+        extracted = user_params.slice(*custom_keys)
+        custom_keys.each do |key|
+          params[:user].delete(key) if params[:user].respond_to?(:delete)
+          params[:user].delete(key.to_sym) if params[:user].respond_to?(:delete)
         end
+        extracted
+      end
+
+      def validate_custom_params(custom_params)
+        organization = invitation_organization
+        return ActiveModel::Errors.new(Object.new) if custom_params.blank? || organization.blank?
+
+        ExtendedData.validate_params(organization, custom_params)
+      end
+
+      def invalid_invitation_resource(errors)
+        resource = resource_class.find_by_invitation_token(invitation_token, true)
+        errors.each { |error| resource.errors.add(error.attribute, error.message) }
+        resource
+      end
+
+      def invitation_token
+        params.dig(:user, :invitation_token) || params[:invitation_token]
+      end
+
+      def invitation_organization
+        resource_class.find_by_invitation_token(invitation_token, true)&.organization
       end
 
       def persist_invitation_extended_data!(resource, custom_params)
-        extended_data = (resource.extended_data || {}).with_indifferent_access
-        RegistrationFields.active_registration_fields(resource.organization).each do |field_def|
-          key = field_def.name
-          next unless custom_params.key?(key.to_s)
+        success, errors = ExtendedData.merge_into(resource, resource.organization, custom_params)
+        return if success
 
-          extended_data[key] = field_def.sanitized_value(custom_params[key.to_s])
+        errors.each do |error|
+          resource.errors.add(error.attribute, error.message)
         end
-        resource.update!(extended_data:)
       end
     end
   end

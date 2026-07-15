@@ -38,14 +38,14 @@ describe "Custom user fields after OIDC registration", :custom_user_fields_scena
 
   it "asks for missing custom fields on the omniauth completion form" do
     expect(page).to have_content("Please complete your profile")
-    expect(page).to have_field("registration_user_represent_association")
+    expect(page).to have_field("registration_user_gland_represent_association")
 
     fill_in :registration_user_email, with: "twitter.custom@example.org"
-    check "registration_user_represent_association"
+    check "registration_user_gland_represent_association"
     click_on "Complete profile"
 
     expect(page).to have_content("confirmation link")
     user = Decidim::User.find_by(email: "twitter.custom@example.org")
-    expect(user.extended_data["represent_association"]).to be(true)
+    expect(user.extended_data["gland_represent_association"]).to be(true)
   end
 end

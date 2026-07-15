@@ -57,7 +57,7 @@ module Decidim
         private
 
         def reference_field_name
-          (options[:ref] || name).to_sym
+          CustomizationFieldNaming.prefixed(customization_name, options[:ref] || name)
         end
 
         def resolve_reference_definition

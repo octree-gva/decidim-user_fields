@@ -7,22 +7,16 @@ module Decidim
     module FormDefinition
       extend ActiveSupport::Concern
 
-      class_methods do
-        def custom_user_field_validation_if(name)
-          ->(record) { record.active_custom_field_names.include?(name) }
-        end
+      included do
+        include ::Decidim::CustomUserFields::ApplicationHelper
+        FormDefinition.setup_form_class(self)
+      end
 
-        def apply_registration_fields!(form_class = self)
+      class << self
+        def setup_form_class(form_class)
           RegistrationFields.all_registration_fields.each do |field_def|
             field_def.configure_form(form_class)
           end
-        end
-      end
-
-      included do |inst|
-        include ::Decidim::CustomUserFields::ApplicationHelper
-        RegistrationFields.all_registration_fields.each do |field_def|
-          field_def.configure_form(inst)
         end
       end
 

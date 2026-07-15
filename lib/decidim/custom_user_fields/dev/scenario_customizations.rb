@@ -10,15 +10,15 @@ module Decidim
           register_neuchatel!
           register_lausanne!
           register_gland!
-          apply_form_definitions!
+          refresh_form_definitions!
         end
 
-        def apply_form_definitions!
+        def refresh_form_definitions!
           [
             Decidim::RegistrationForm,
             Decidim::OmniauthRegistrationForm,
             Decidim::AccountForm
-          ].each(&:apply_registration_fields!)
+          ].each { |form_class| FormDefinition.setup_form_class(form_class) }
         end
 
         private

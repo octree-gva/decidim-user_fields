@@ -22,9 +22,9 @@ en:
         lausanne: "Lausanne"
         gland: "Gland"
       extended_data:
-        birthdate:
+        neuchatel_birthdate:
           label: "Birthdate"
-        represent_association:
+        gland_represent_association:
           label: "I represent an association"
       twelve_plus:
         birthdate:

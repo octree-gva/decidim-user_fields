@@ -46,7 +46,7 @@ describe Decidim::CustomUserFields::Fields::ExtraFieldRefField do
         field.configure_form(form_class)
 
         expect(field.reference).to be_a(Decidim::CustomUserFields::FieldDefinition)
-        expect(field.reference.name).to eq(:ref_me)
+        expect(field.reference.name).to eq(:community_ref_me)
       end
     end
   end
@@ -60,7 +60,7 @@ describe Decidim::CustomUserFields::Fields::ExtraFieldRefField do
   end
 
   describe "#form_tag" do
-    let(:user) { create(:user, extended_data: { ref_me: " 2000 " }) }
+    let(:user) { create(:user, extended_data: { community_ref_me: " 2000 " }) }
     let(:form_object) do
       Class.new do
         attr_reader :user

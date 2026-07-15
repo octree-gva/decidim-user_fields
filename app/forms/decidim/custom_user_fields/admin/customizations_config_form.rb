@@ -25,66 +25,6 @@ module Decidim
             end
           end
         end
-
-        validate :no_conflicting_disabled_customizations
-
-        def incompatible_authorization_names
-          return @incompatible_authorization_names if defined?(@incompatible_authorization_names)
-
-          org = current_organization
-          @incompatible_authorization_names = if org
-                                                AuthorizationCustomizationCompatibility.incompatible_with_enabled_customizations(
-                                                  org.available_authorizations,
-                                                  self.class.enabled_customization_names_from(self)
-                                                )
-                                              else
-                                                []
-                                              end
-        end
-
-        private
-
-        def no_conflicting_disabled_customizations
-          org = current_organization
-          return unless org
-
-          Customizations.all.each do |customization|
-            next unless customization_being_disabled?(customization.name)
-
-            blocking = AuthorizationCustomizationCompatibility.blocking_authorizations_for_disabled_customization(
-              org,
-              customization.name
-            )
-            next if blocking.blank?
-
-            errors.add(
-              :"#{customization.name}_enabled",
-              I18n.t(
-                "incompatible_authorizations",
-                scope: "decidim.custom_user_fields.system.customizations",
-                authorizations: blocking.join(", ")
-              )
-            )
-          end
-        end
-
-        def customization_being_disabled?(name)
-          was_enabled = boolean_from_config(previous_config, name)
-          now_enabled = public_send(:"#{name}_enabled")
-          was_enabled && !now_enabled
-        end
-
-        def previous_config
-          @previous_config ||= Decidim::Toggle.config_for(current_organization, :custom_user_fields)
-        rescue StandardError
-          {}
-        end
-
-        def boolean_from_config(config, customization_name)
-          ActiveModel::Type::Boolean.new.cast(
-            config[:"#{customization_name}_enabled"] || config["#{customization_name}_enabled"]
-          )
-        end
       end
     end
   end

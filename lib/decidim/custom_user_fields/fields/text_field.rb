@@ -33,6 +33,16 @@ module Decidim
           form[name] = data[name].strip if data[name].present?
         end
 
+        def validate(value, _data, errors)
+          if required? && value.blank?
+            errors.add(name, label(:required))
+          elsif options[:values_in] && value.present? && !options[:values_in].include?(value)
+            errors.add(name, label(:bad_values))
+          elsif options[:format] && value.present? && value !~ options[:format]
+            errors.add(name, label(:bad_format))
+          end
+        end
+
         def sanitized_value(value)
           stripped_value = (value || "").strip
           return stripped_value if stripped_value.present?

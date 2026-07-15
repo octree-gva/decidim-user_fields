@@ -17,44 +17,12 @@ module Decidim
 
       initializer "decidim_custom_user_fields.registration_additions" do
         config.to_prepare do
-          Decidim::RegistrationForm.class_eval do
-            include CustomUserFields::FormDefinition
-            def self.require_password_on_accepting
-              Decidim::User.require_password_on_accepting
-            end
-          end
-
-          Decidim::OmniauthRegistrationForm.class_eval do
-            include CustomUserFields::FormDefinition
-          end
-
-          Decidim::AccountForm.class_eval do
-            include CustomUserFields::FormDefinition
-          end
-
-          Decidim::CreateRegistration.class_eval do
-            prepend CustomUserFields::Command
-          end
-
-          Decidim::CreateOmniauthRegistration.class_eval do
-            prepend CustomUserFields::OmniauthCommand
-          end
-
-          Decidim::UpdateAccount.class_eval do
-            prepend CustomUserFields::Command
-          end
-
-          Decidim::Toggle::UpdateAuthorizationsForm.include(
-            CustomUserFields::Toggle::AuthorizationsCustomizationValidation
-          )
-
-          Decidim::Devise::InvitationsController.prepend CustomUserFields::InvitationAcceptExtendedData
+          DecidimIntegrations.apply!
         end
       end
 
       initializer "decidim_custom_user_fields.dev_openid_connect",
                   after: :load_config_initializers do
-        require "decidim/custom_user_fields/dev/openid_connect_setup"
         Decidim::CustomUserFields::Dev::OpenidConnectSetup.register_middleware!
       end
 

@@ -74,6 +74,19 @@ describe Decidim::CustomUserFields::Fields::TextField do
     end
   end
 
+  describe "#validate" do
+    let(:options) { { values_in: %w(a b) } }
+
+    it "adds an error when the value is not allowed" do
+      errors = ActiveModel::Errors.new(Object.new)
+      allow(field).to receive(:label).and_return("bad")
+
+      field.validate("c", {}, errors)
+
+      expect(errors[:test_field]).to be_present
+    end
+  end
+
   describe "#sanitized_value" do
     it "strips and turns blank into nil" do
       expect(field.sanitized_value("  hello ")).to eq("hello")

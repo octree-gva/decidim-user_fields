@@ -15,7 +15,7 @@ describe "Scenario authorization workflows", :custom_user_fields_scenarios, type
     before { enable_customization_for(organization, :neuchatel) }
 
     it "grants eighteen_plus when the user is old enough" do
-      user.update!(extended_data: { birthdate: birthdate_for_age(20) })
+      user.update!(extended_data: { neuchatel_birthdate: birthdate_for_age(20) })
 
       visit decidim_verifications.new_authorization_path(handler: "eighteen_plus")
       click_on "Send"
@@ -51,7 +51,7 @@ describe "Scenario authorization workflows", :custom_user_fields_scenarios, type
     before { enable_customization_for(organization, :gland) }
 
     it "grants association_only when the user represents an association" do
-      user.update!(extended_data: { represent_association: true })
+      user.update!(extended_data: { gland_represent_association: true })
 
       visit decidim_verifications.new_authorization_path(handler: "association_only")
       click_on "Send"
@@ -60,7 +60,7 @@ describe "Scenario authorization workflows", :custom_user_fields_scenarios, type
     end
 
     it "rejects association_only when the user does not represent an association" do
-      user.update!(extended_data: { represent_association: false })
+      user.update!(extended_data: { gland_represent_association: false })
 
       visit decidim_verifications.new_authorization_path(handler: "association_only")
       click_on "Send"

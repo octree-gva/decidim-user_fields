@@ -81,7 +81,7 @@ describe Decidim::CustomUserFields::RegistrationFields do
         enable_customization_for(organization, :community, :ngos)
 
         fields = described_class.active_registration_fields(organization)
-        expect(fields.map(&:name)).to contain_exactly(:foo, :bar)
+        expect(fields.map(&:name)).to contain_exactly(:community_foo, :ngos_bar)
       end
     end
   end
@@ -96,7 +96,7 @@ describe Decidim::CustomUserFields::RegistrationFields do
           customization.registration_fields { |set| set.add_field(:bar, type: :dummy) }
         end
 
-        expect(described_class.all_registration_fields.map(&:name)).to contain_exactly(:foo, :bar)
+        expect(described_class.all_registration_fields.map(&:name)).to contain_exactly(:a_foo, :b_bar)
       end
     end
   end

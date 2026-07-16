@@ -13,7 +13,7 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
 
   it "enables a customization and exposes its authorizations in the authorizations tab" do
     click_on "User field customizations"
-    check "organization_neuchatel_enabled"
+    check "organization_birthdate_age_gates_enabled"
     click_on "Save"
 
     settings_updated_successfully!
@@ -31,12 +31,12 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
   end
 
   it "allows disabling a customization even when its authorizations remain enabled" do
-    enable_customization_for(organization, :neuchatel)
+    enable_customization_for(organization, :birthdate_age_gates)
     organization.update!(available_authorizations: %w(sixteen_plus))
 
     visit decidim_system.edit_organization_path(organization)
     click_on "User field customizations"
-    uncheck "organization_neuchatel_enabled"
+    uncheck "organization_birthdate_age_gates_enabled"
     click_on "Save"
 
     settings_updated_successfully!
@@ -48,7 +48,7 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
     expect(page).to have_content("Example authorization")
 
     click_on "User field customizations"
-    check "organization_gland_enabled"
+    check "organization_association_enabled"
     click_on "Save"
 
     click_on "Authorizations"

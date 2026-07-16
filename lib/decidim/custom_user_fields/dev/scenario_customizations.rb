@@ -5,11 +5,11 @@ module Decidim
     module ScenarioCustomizations
       class << self
         def register!
-          return if Customizations.find(:neuchatel)
+          return if Customizations.find(:birthdate_age_gates)
 
-          register_neuchatel!
-          register_lausanne!
-          register_gland!
+          register_birthdate_age_gates!
+          register_location_validation!
+          register_association!
           refresh_form_definitions!
         end
 
@@ -23,8 +23,8 @@ module Decidim
 
         private
 
-        def register_neuchatel!
-          Decidim::CustomUserFields.register_customization(:neuchatel) do |customization|
+        def register_birthdate_age_gates!
+          Decidim::CustomUserFields.register_customization(:birthdate_age_gates) do |customization|
             customization.registration_fields do |set|
               set.add_field :birthdate, type: :date, required: false
             end
@@ -41,8 +41,8 @@ module Decidim
           end
         end
 
-        def register_lausanne!
-          Decidim::CustomUserFields.register_customization(:lausanne) do |customization|
+        def register_location_validation!
+          Decidim::CustomUserFields.register_customization(:location_validation) do |customization|
             customization.authorization "LocationValidated" do |config|
               config.add_field :birthdate, type: :text, required: true, format: /\A\d{2}\.\d{2}\.\d{4}\z/
               config.add_field :postal_code, type: :text, required: true
@@ -51,8 +51,8 @@ module Decidim
           end
         end
 
-        def register_gland!
-          Decidim::CustomUserFields.register_customization(:gland) do |customization|
+        def register_association!
+          Decidim::CustomUserFields.register_customization(:association) do |customization|
             customization.registration_fields do |set|
               set.add_field :represent_association, type: :boolean, required: true
             end

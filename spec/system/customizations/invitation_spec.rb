@@ -8,7 +8,7 @@ describe "Custom user fields invitation acceptance", :custom_user_fields_scenari
   let!(:inviter) { create(:user, :admin, :confirmed, organization:) }
 
   before do
-    enable_customization_for(organization, :gland)
+    enable_customization_for(organization, :association)
     switch_to_host(organization.host)
   end
 
@@ -25,16 +25,16 @@ describe "Custom user fields invitation acceptance", :custom_user_fields_scenari
 
     visit "/users/invitation/accept?invitation_token=#{invited.raw_invitation_token}"
 
-    expect(page).to have_field("invitation_user_gland_represent_association")
+    expect(page).to have_field("invitation_user_association_represent_association")
     expect(page).to have_content("I represent an association")
 
     fill_in :invitation_user_nickname, with: "private_asm_user"
     fill_in :invitation_user_password, with: "decidim123456789"
-    check "invitation_user_gland_represent_association"
+    check "invitation_user_association_represent_association"
     check :invitation_user_tos_agreement
     click_on "Save"
 
     expect(page).to have_content("Your password was set successfully")
-    expect(invited.reload.extended_data["gland_represent_association"]).to be(true)
+    expect(invited.reload.extended_data["association_represent_association"]).to be(true)
   end
 end

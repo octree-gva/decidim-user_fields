@@ -10,39 +10,39 @@ describe "Custom user fields registration", :custom_user_fields_scenarios, type:
     switch_to_host(organization.host)
   end
 
-  context "with Neuchâtel customization enabled" do
-    before { enable_customization_for(organization, :neuchatel) }
+  context "with birthdate age gates customization enabled" do
+    before { enable_customization_for(organization, :birthdate_age_gates) }
 
     it "shows an optional birthdate field" do
       visit decidim.new_user_registration_path
 
-      expect_custom_date_field("registration_user_neuchatel_birthdate", label: "Birthdate")
+      expect_custom_date_field("registration_user_birthdate_age_gates_birthdate", label: "Birthdate")
     end
 
     it "registers without birthdate" do
       visit decidim.new_user_registration_path
-      fill_registration_form_base(email: "neuchatel.optional@example.org")
+      fill_registration_form_base(email: "birthdate.optional@example.org")
       submit_registration_form
 
       expect(page).to have_content("confirmation link")
-      user = Decidim::User.find_by(email: "neuchatel.optional@example.org")
-      expect(user.extended_data["neuchatel_birthdate"]).to be_blank
+      user = Decidim::User.find_by(email: "birthdate.optional@example.org")
+      expect(user.extended_data["birthdate_age_gates_birthdate"]).to be_blank
     end
 
     it "registers with birthdate" do
       visit decidim.new_user_registration_path
-      fill_registration_form_base(email: "neuchatel.with-date@example.org")
-      fill_custom_date_field("registration_user_neuchatel_birthdate", age: 20)
+      fill_registration_form_base(email: "birthdate.with-date@example.org")
+      fill_custom_date_field("registration_user_birthdate_age_gates_birthdate", age: 20)
       submit_registration_form
 
       expect(page).to have_content("confirmation link")
-      user = Decidim::User.find_by(email: "neuchatel.with-date@example.org")
-      expect(user.extended_data["neuchatel_birthdate"]).to eq(birthdate_for_age(20))
+      user = Decidim::User.find_by(email: "birthdate.with-date@example.org")
+      expect(user.extended_data["birthdate_age_gates_birthdate"]).to eq(birthdate_for_age(20))
     end
   end
 
-  context "with Lausanne customization enabled" do
-    before { enable_customization_for(organization, :lausanne) }
+  context "with location validation customization enabled" do
+    before { enable_customization_for(organization, :location_validation) }
 
     it "does not show registration fields" do
       visit decidim.new_user_registration_path
@@ -51,14 +51,14 @@ describe "Custom user fields registration", :custom_user_fields_scenarios, type:
     end
   end
 
-  context "with Gland customization enabled" do
-    before { enable_customization_for(organization, :gland) }
+  context "with association customization enabled" do
+    before { enable_customization_for(organization, :association) }
 
     it "requires the association boolean on registration" do
       visit decidim.new_user_registration_path
-      expect(page).to have_field("registration_user_gland_represent_association")
+      expect(page).to have_field("registration_user_association_represent_association")
 
-      fill_registration_form_base(email: "gland.missing@example.org")
+      fill_registration_form_base(email: "association.missing@example.org")
       submit_registration_form
 
       expect(page).to have_current_path decidim.user_registration_path
@@ -66,13 +66,13 @@ describe "Custom user fields registration", :custom_user_fields_scenarios, type:
 
     it "registers when the association boolean is checked" do
       visit decidim.new_user_registration_path
-      fill_registration_form_base(email: "gland.ok@example.org")
-      check "registration_user_gland_represent_association"
+      fill_registration_form_base(email: "association.ok@example.org")
+      check "registration_user_association_represent_association"
       submit_registration_form
 
       expect(page).to have_content("confirmation link")
-      user = Decidim::User.find_by(email: "gland.ok@example.org")
-      expect(user.extended_data["gland_represent_association"]).to be(true)
+      user = Decidim::User.find_by(email: "association.ok@example.org")
+      expect(user.extended_data["association_represent_association"]).to be(true)
     end
   end
 end

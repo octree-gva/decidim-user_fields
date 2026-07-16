@@ -18,13 +18,13 @@ en:
         explanation: "Only for association representatives"
     custom_user_fields:
       customizations:
-        neuchatel: "Neuchâtel"
-        lausanne: "Lausanne"
-        gland: "Gland"
+        birthdate_age_gates: "Birthdate age gates"
+        location_validation: "Location validation"
+        association: "Association representative"
       extended_data:
-        neuchatel_birthdate:
+        birthdate_age_gates_birthdate:
           label: "Birthdate"
-        gland_represent_association:
+        association_represent_association:
           label: "I represent an association"
       twelve_plus:
         birthdate:

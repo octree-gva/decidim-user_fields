@@ -11,11 +11,11 @@ describe "Scenario authorization workflows", :custom_user_fields_scenarios, type
     login_as user, scope: :user
   end
 
-  context "with Neuchâtel enabled" do
-    before { enable_customization_for(organization, :neuchatel) }
+  context "with birthdate age gates enabled" do
+    before { enable_customization_for(organization, :birthdate_age_gates) }
 
     it "grants eighteen_plus when the user is old enough" do
-      user.update!(extended_data: { neuchatel_birthdate: birthdate_for_age(20) })
+      user.update!(extended_data: { birthdate_age_gates_birthdate: birthdate_for_age(20) })
 
       visit decidim_verifications.new_authorization_path(handler: "eighteen_plus")
       click_on "Send"
@@ -32,8 +32,8 @@ describe "Scenario authorization workflows", :custom_user_fields_scenarios, type
     end
   end
 
-  context "with Lausanne enabled" do
-    before { enable_customization_for(organization, :lausanne) }
+  context "with location validation enabled" do
+    before { enable_customization_for(organization, :location_validation) }
 
     it "validates the location fields format" do
       visit decidim_verifications.new_authorization_path(handler: "location_validated")
@@ -47,11 +47,11 @@ describe "Scenario authorization workflows", :custom_user_fields_scenarios, type
     end
   end
 
-  context "with Gland enabled" do
-    before { enable_customization_for(organization, :gland) }
+  context "with association customization enabled" do
+    before { enable_customization_for(organization, :association) }
 
     it "grants association_only when the user represents an association" do
-      user.update!(extended_data: { gland_represent_association: true })
+      user.update!(extended_data: { association_represent_association: true })
 
       visit decidim_verifications.new_authorization_path(handler: "association_only")
       click_on "Send"
@@ -60,7 +60,7 @@ describe "Scenario authorization workflows", :custom_user_fields_scenarios, type
     end
 
     it "rejects association_only when the user does not represent an association" do
-      user.update!(extended_data: { gland_represent_association: false })
+      user.update!(extended_data: { association_represent_association: false })
 
       visit decidim_verifications.new_authorization_path(handler: "association_only")
       click_on "Send"

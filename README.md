@@ -28,10 +28,7 @@ This Decidim module adds custom user fields through a configuration file and wit
 - User registration
 - User profiles
 - User invitations
-
-⚠️ It **does not support**:
-
-- Omniauth registrations
+- Omniauth registration (OIDC profile completion after IdP sign-in)
 
 > Are you on GitHub ? Please use the reference repository on [GitLab for issues and pull requests](https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-user_fields).
 
@@ -77,7 +74,7 @@ end
 
 Customization labels for the admin toggles: `decidim.custom_user_fields.customizations.<name>`.
 
-Disabling a customization is blocked while the organization still has that customization's authorization workflows enabled.
+Sysadmins enable or disable whole customizations per organization; authorizations bundled in a customization are toggled together with it.
 
 ## Upgrading from field sets to customizations
 
@@ -98,21 +95,34 @@ DRY_RUN=1 bin/rails decidim_custom_user_fields:upgrade:migrate_toggle_config
 
 Refactor your initializer from `register_field_set` to `register_customization`, keeping the same customization name as the former field set (e.g. `:default`).
 
-## Local testing with Zitadel (OIDC)
+## Try Omniauth locally (Zitadel + Docker)
 
-Docker Compose ships a Zitadel IdP, MailCatcher, and seed scripts for manual end-to-end testing (OIDC login → custom field completion → authorizations).
+**Prerequisite:** Docker and Docker Compose.
 
-First-time setup (generates the dummy app if needed, ~5–10 min):
+`docker compose up` starts infrastructure only (Postgres, Zitadel, MailCatcher). It does **not** start Decidim — there is no idle `decidim` service in the default stack.
 
-```bash
-./bin/dev-local-setup
-```
+### Quick start
 
-Then start Decidim:
+One command — setup (~5–10 min first time) then Decidim on http://localhost:3000:
 
 ```bash
-docker compose --profile web up web
+./bin/dev-oidc-up
 ```
+
+Idempotent: safe to re-run when the stack is already up.
+
+### What `./bin/dev-oidc-up` does
+
+| Step | Action | Output |
+|------|--------|--------|
+| 1 | Start Zitadel stack | Zitadel on :8080, admin PAT in `docker/zitadel/bootstrap/admin.pat` |
+| 2 | Configure Zitadel SMTP + OIDC app | `docker/zitadel/oidc.env` (gitignored) |
+| 3 | `rake test_app` (first time only) | Dummy app in `spec/decidim_dummy_app` |
+| 4 | `dev:prepare_secrets`, `db:schema:load` | Empty Decidim schema |
+| 5 | `dev:seed` | Minimal org + admin + Zitadel provider + **association** scenario |
+| 6 | `docker compose --profile dev run --rm --service-ports decidim … rails s` | Rails on http://localhost:3000 (foreground) |
+
+### URLs and credentials
 
 | URL | Purpose |
 |-----|---------|
@@ -120,34 +130,60 @@ docker compose --profile web up web
 | http://localhost:8080 | Zitadel console |
 | http://localhost:1080 | MailCatcher (emails) |
 
-Default credentials:
+| Account | Login |
+|---------|-------|
+| Decidim admin | `admin@example.org` / `decidim123456789` |
+| Zitadel admin | `admin@zitadel.localhost` / `Password1!` |
 
-- **Zitadel admin:** `admin@zitadel.localhost` / `Password1!`
-- **Decidim admin:** `admin@example.org` / `decidim123456789`
+### Experiment: OIDC sign-in → custom fields
 
-The setup script:
+1. Open http://localhost:8080, sign in as Zitadel admin.
+2. **Users → New** — create a test user (email + password).
+3. Open http://localhost:3000/users/sign_in, click **Zitadel**, sign in with that user.
+4. Complete the profile form — the association demo shows the “I represent an association” checkbox.
+5. Optional: verify authorization at http://localhost:3000/account/authorizations/new?handler=association_only (after checking the boolean on registration).
 
-1. Starts Zitadel + Postgres + MailCatcher
-2. Creates the OIDC app (`docker/zitadel/oidc.env`)
-3. Seeds the demo org with Zitadel as `openid_connect` provider
-4. Enables the **Gland** scenario customization (`DEV_CUSTOMIZATION=gland` by default)
-
-Use a Zitadel user (create one in the console) to sign in via **Zitadel** on the Decidim login page. Missing custom fields appear on the OIDC completion form.
-
-Individual steps:
+Change the seeded scenario (e.g. optional birthdate + age authorizations):
 
 ```bash
-docker compose up -d zitadel zitadel-db mailcatcher user-fields-pg
-./bin/setup-zitadel-oidc          # writes docker/zitadel/oidc.env
-cd spec/decidim_dummy_app
-bundle exec rake decidim_custom_user_fields:dev:prepare_secrets
-bundle exec rake decidim_custom_user_fields:dev:seed
+DEV_CUSTOMIZATION=birthdate_age_gates ./bin/dev-oidc-up
 ```
 
-Reset Zitadel data: `docker compose down -v` (re-runs first-instance bootstrap).
+### Environment variables (local OIDC)
 
-## How to add a custom user field.
-Create an initializer `config/initializers/custom_user_fields.rb`
+| Variable | Default | Required | Purpose |
+|----------|---------|----------|---------|
+| `DEV_CUSTOMIZATION` | `association` | no | Scenario customization enabled by `dev:seed` (`association`, `birthdate_age_gates`, `location_validation`) |
+| `DECIDIM_HOST` | `localhost` | no | Organization host matched by `dev:seed` |
+| `ZITADEL_OIDC_ENABLED` | set in compose | no | Loads dev OIDC middleware + scenario customizations |
+| `ZITADEL_URL` | `http://localhost:8080` | no | Zitadel API base URL used by `dev-oidc-up` |
+| `OIDC_ISSUER` | `http://localhost:8080` | no | Public issuer written to `oidc.env` |
+| `OIDC_REDIRECT_URI` | `http://localhost:3000/users/auth/openid_connect/callback` | no | OIDC redirect URI for the Zitadel app |
+
+Generated at setup time (do not commit): `docker/zitadel/oidc.env` — see `docker/zitadel/oidc.env.example`.
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| No **Zitadel** button on sign-in | Re-run `./bin/dev-oidc-up` |
+| `Missing docker/zitadel/oidc.env` | Re-run `./bin/dev-oidc-up` (Zitadel must be ready first) |
+| `Missing PAT at docker/zitadel/bootstrap/admin.pat` | `docker compose down -v` then `./bin/dev-oidc-up` |
+| Zitadel not ready yet | Wait 1–2 min on first boot; check http://localhost:8080/debug/ready |
+| `connection refused` to `localhost:8080` on Zitadel login | Re-run `./bin/dev-oidc-up` — token/userinfo must use `zitadel:8080` inside Docker |
+| Zitadel login fails with `"Unknown"` / `Instance not found` | Ensure `ZITADEL_PUBLIC_HOST=localhost:8080` on the Decidim container (Host header for internal calls) |
+| OIDC completes custom fields but asks for email confirmation | Re-run `./bin/dev-oidc-up` after updating the gem — OpenID Connect verified emails should sign you in directly |
+| Port 3000 empty | Do not use plain `docker compose up` (no Rails service without a profile) — use `./bin/dev-oidc-up` |
+| `network … not found` when starting Rails | Stale compose network after one-shots — re-run `./bin/dev-oidc-up` (script no longer uses `profile web up`) |
+| `decidim_users already exists` on setup | Re-run `docker compose down -v && ./bin/dev-oidc-up` (script now runs `db:schema:load`) |
+| `A server is already running` / stale `server.pid` | `rm -f spec/decidim_dummy_app/tmp/pids/server.pid` then re-run `./bin/dev-oidc-up` |
+
+Reset all local data: `docker compose down -v` then `./bin/dev-oidc-up`.
+
+## How to add a custom user field
+
+Create an initializer `config/initializers/custom_user_fields.rb`:
+
 ```ruby
 Decidim::CustomUserFields.register_customization :default do |customization|
   customization.registration_fields do |set|
@@ -295,55 +331,35 @@ fr:
         help_text: Seul les communies prêt de maCommune peux être acceptée
 ```
 
-# Run locally
-To run this module locally, we use Docker-compose:
+## Module development (specs, shell)
+
+For **OIDC experimentation**, use [Try Omniauth locally](#try-omniauth-locally-zitadel--docker) above.
+
+The `decidim` compose service is the OIDC/dev container (shell or Rails). `./bin/dev-oidc-up` starts Rails with `compose run --service-ports`.
 
 ```bash
-docker-compose up
-```
-This will run a decidim-user_fields container, which **sleeps and does nothing**.
+# Interactive shell in the dev container
+docker compose --profile dev run --rm decidim bash
 
-After your containers are mounted, you can seed the database: 
-```bash
-  docker-compose exec -it decidim-user_fields bin/rails db:seed
-```
+# Rails only (infra must already be up — e.g. after a partial setup)
+docker compose --profile dev run --rm --service-ports decidim bash -c \
+  "cd /home/module/spec/decidim_dummy_app && rm -f tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0 -p 3000"
 
-Then, you can start the server
-```bash
-  docker-compose exec -it decidim-user_fields bin/rails s -b 0.0.0.0
+# Specs (from repo root, dummy app Gemfile)
+docker compose --profile dev run --rm decidim bash -c \
+  "cd /home/module && BUNDLE_GEMFILE=spec/decidim_dummy_app/Gemfile bundle exec rspec"
 ```
 
-You can then open a bash session and edit the initializer, as described in the "How to add a custom user field" section. 
-```bash
-  docker-compose exec -it decidim-user_fields bash
-```
+Useful paths inside the container:
 
-Once something change, reset your server: 
-```bash
-  docker-compose exec -it decidim-user_fields bin/rails restart
-```
-While developing locally, you have two environment variables that can help you:
+| Path | Purpose |
+|------|---------|
+| `/home/module` | This gem (mounted from the repo) |
+| `/home/module/spec/decidim_dummy_app` | Dummy Decidim app used for local OIDC + specs |
 
-* `ROOT`: the root of the application using the module
-* `MODULE_ROOT`: the place where your gem code is.
+Environment variables in the dev image:
 
-
-
-### Usefull commands
-
-| Command                                                                                          | Description                                         |
-|--------------------------------------------------------------------------------------------------|-----------------------------------------------------|
-| `docker-compose exec -it decidim-user_fields bundle exec rails db:seed`                          | Seed the database (run on localhost:3000)           |
-| `docker-compose exec -it decidim-user_fields bin/webpack-dev-server`                             | Compile assets and watch for changes                |
-| `docker-compose exec -it decidim-user_fields bin/rails s -b 0.0.0.0`                             | Run the Rails server in development                 |
-| `docker-compose exec -it decidim-user_fields bundle exec rspec /home/decidim/module/spec`        | Run tests for the module                            |
-| `docker-compose exec -it decidim-user_fields bundle exec rubocop -a /home/decidim/module`        | Correct lint errors with RuboCop                    |
-| `docker-compose exec -it decidim-user_fields bash`                                               | Navigate your container in bash                     |
-
-
-
-
-While developing locally, you have two environment variables that can help you:
-
-* `ROOT`: the root of the application using the module
-* `MODULE_ROOT`: the place where your gem code is.
+| Variable | Purpose |
+|----------|---------|
+| `DEV_MODULE` | Gem under development (`decidim-user_fields`) |
+| `DECIDIM_VERSION` | Decidim release used by the dummy app |

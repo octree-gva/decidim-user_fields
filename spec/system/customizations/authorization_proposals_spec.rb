@@ -16,7 +16,7 @@ describe "Custom authorization on proposals", :custom_user_fields_scenarios, typ
   end
 
   before do
-    enable_customization_for(organization, :neuchatel)
+    enable_customization_for(organization, :birthdate_age_gates)
     switch_to_host(organization.host)
     login_as user, scope: :user
   end

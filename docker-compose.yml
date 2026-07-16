@@ -1,5 +1,6 @@
 services:
   decidim:
+    profiles: ["dev"]
     command: bash -c "sleep infinity"
     image: octree/decidim-dev:0.29
     entrypoint: ""
@@ -16,39 +17,10 @@ services:
       - DECIDIM_VERSION=0.29.4
       - DEV_MODULE=decidim-user_fields
       - RAILS_ENV=development
+      - DISABLE_SPRING=1
       - DECIDIM_HOST=localhost
       - ZITADEL_OIDC_ENABLED=1
-      - OMNIAUTH_OPENID_CONNECT_ENABLED=true
-    ports:
-      - 3000:3000
-    depends_on:
-      user-fields-pg:
-        condition: service_healthy
-      zitadel:
-        condition: service_started
-
-  web:
-    profiles: ["web"]
-    image: octree/decidim-dev:0.29
-    entrypoint: ""
-    working_dir: /home/module
-    command: >-
-      bash -c "cd spec/decidim_dummy_app &&
-      bundle check || bundle install -j $$(nproc) &&
-      bundle exec rails server -b 0.0.0.0 -p 3000"
-    volumes:
-      - .:/home/module
-      - bundle:/home/decidim/vendor
-      - node_modules:/home/decidim/node_modules
-    environment:
-      - DATABASE_HOST=user-fields-pg
-      - DATABASE_USERNAME=decidim
-      - DATABASE_PASSWORD=pleaseChangeMe
-      - DATABASE_URL=postgresql://decidim:pleaseChangeMe@user-fields-pg:5432/decidim
-      - DECIDIM_VERSION=0.29.4
-      - RAILS_ENV=development
-      - DECIDIM_HOST=localhost
-      - ZITADEL_OIDC_ENABLED=1
+      - ZITADEL_PUBLIC_HOST=localhost:8080
       - OMNIAUTH_OPENID_CONNECT_ENABLED=true
     ports:
       - 3000:3000

@@ -10,7 +10,13 @@ module Decidim
         SNIPPET = <<~YAML
           openid_connect:
             enabled: <%= Decidim::Env.new("OMNIAUTH_OPENID_CONNECT_ENABLED", "true").to_boolean_string %>
-            icon: shield-keyhole-line
+            icon: shield-line
+        YAML
+
+        DEVELOPMENT_SNIPPET = <<~YAML
+            openid_connect:
+              enabled: <%= Decidim::Env.new("OMNIAUTH_OPENID_CONNECT_ENABLED", "true").to_boolean_string %>
+              icon: shield-line
         YAML
 
         def self.call(secrets_path: default_secrets_path)
@@ -30,19 +36,31 @@ module Decidim
           raise "Missing #{secrets_path}. Run: bundle exec rake test_app" unless secrets_path.file?
 
           content = secrets_path.read
-          return :skipped if content.include?("openid_connect:")
+          patched = content
+          status = :skipped
 
-          unless content.match?(/\n\s*google_oauth2:\n/)
-            raise "Could not locate omniauth section in #{secrets_path}"
+          unless content.include?("openid_connect:")
+            unless patched.match?(/\n\s*google_oauth2:\n/)
+              raise "Could not locate omniauth section in #{secrets_path}"
+            end
+
+            patched = patched.sub(
+              /(\n\s*google_oauth2:.*?\n\s*client_secret:.*?\n)/m,
+              "\\1#{indent_snippet}\n"
+            )
+            status = :patched
           end
 
-          patched = content.sub(
-            /(\n\s*google_oauth2:.*?\n\s*client_secret:.*?\n)/m,
-            "\\1#{indent_snippet}\n"
-          )
+          unless patched.match?(/development:\n(?:.*\n)*?\s*omniauth:\n(?:.*\n)*?\s*openid_connect:/m)
+            patched = patched.sub(
+              /(development:\n(?:.*\n)*?\s*omniauth:\n(?:.*\n)*?\s*developer:.*?\n\s*icon:.*?\n)/m,
+              "\\1#{DEVELOPMENT_SNIPPET}\n"
+            )
+            status = :patched
+          end
 
-          secrets_path.write(patched)
-          :patched
+          secrets_path.write(patched) if status == :patched
+          status
         end
 
         private

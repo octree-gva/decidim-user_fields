@@ -5,9 +5,9 @@ module Decidim
     module SpecHelpers
       module SystemCustomizationHelpers
         SCENARIO_AUTHORIZATIONS = {
-          neuchatel: %w(twelve_plus sixteen_plus eighteen_plus),
-          lausanne: %w(location_validated),
-          gland: %w(association_only)
+          birthdate_age_gates: %w(twelve_plus sixteen_plus eighteen_plus),
+          location_validation: %w(location_validated),
+          association: %w(association_only)
         }.freeze
 
         def enable_customization_for(organization, *names)

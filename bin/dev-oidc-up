@@ -1,0 +1,274 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+DUMMY_APP="spec/decidim_dummy_app"
+ZITADEL_URL="${ZITADEL_URL:-http://localhost:8080}"
+PUBLIC_ISSUER="${OIDC_ISSUER:-http://localhost:8080}"
+PAT_FILE="${PAT_FILE:-docker/zitadel/bootstrap/admin.pat}"
+REDIRECT_URI="${OIDC_REDIRECT_URI:-http://localhost:3000/users/auth/openid_connect/callback}"
+ENV_FILE="${ENV_FILE:-docker/zitadel/oidc.env}"
+PROJECT_NAME="${ZITADEL_PROJECT_NAME:-Decidim Custom User Fields}"
+APP_NAME="${ZITADEL_APP_NAME:-decidim-user-fields}"
+SMTP_HOST="${ZITADEL_SMTP_HOST:-mailcatcher:1025}"
+SMTP_FROM="${ZITADEL_SMTP_FROM:-zitadel@localhost}"
+SMTP_FROM_NAME="${ZITADEL_SMTP_FROM_NAME:-Zitadel}"
+SMTP_TLS="${ZITADEL_SMTP_TLS:-false}"
+
+zitadel_instance_host=()
+zitadel_auth_header=()
+
+zitadel_host_header() {
+  zitadel_instance_host=()
+  local zitadel_host
+  zitadel_host="$(ruby -ruri -e 'puts URI(ARGV[0]).host' "$ZITADEL_URL")"
+  if [[ "$zitadel_host" == "zitadel" ]]; then
+    local public_host
+    public_host="$(ruby -ruri -e 'u=URI(ARGV[0]); puts u.port == u.default_port ? u.host : "#{u.host}:#{u.port}"' "$PUBLIC_ISSUER")"
+    zitadel_instance_host=(-H "Host: ${public_host}")
+  fi
+}
+
+wait_for_zitadel() {
+  echo "Waiting for Zitadel at ${ZITADEL_URL}..."
+  local max_wait="${ZITADEL_MAX_WAIT:-120}"
+  local i
+  for ((i = 1; i <= max_wait; i++)); do
+    if curl -sf "${ZITADEL_URL}/debug/ready" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "Zitadel is not ready. First boot can take 1–2 minutes." >&2
+  exit 1
+}
+
+load_zitadel_pat() {
+  if [[ ! -f "$PAT_FILE" ]]; then
+    echo "Missing PAT at ${PAT_FILE}. Reset with: docker compose down -v && ./bin/dev-oidc-up" >&2
+    exit 1
+  fi
+  local pat
+  pat="$(tr -d '[:space:]' < "$PAT_FILE")"
+  if [[ -z "$pat" ]]; then
+    echo "PAT file is empty: ${PAT_FILE}" >&2
+    exit 1
+  fi
+  zitadel_host_header
+  zitadel_auth_header=("${zitadel_instance_host[@]}" -H "Authorization: Bearer ${pat}" -H "Content-Type: application/json")
+}
+
+setup_zitadel_smtp() {
+  load_zitadel_pat
+
+  local providers provider_id provider_state
+  providers="$(curl -sf "${ZITADEL_URL}/admin/v1/email/_search" "${zitadel_auth_header[@]}" -d '{}' || echo '{}')"
+  read -r provider_id provider_state <<<"$(echo "$providers" | SMTP_HOST="$SMTP_HOST" ruby -rjson -e '
+    data = JSON.parse(STDIN.read)
+    host = ENV.fetch("SMTP_HOST", "mailcatcher:1025")
+    match = data.fetch("result", []).find { |entry| entry.dig("smtp", "host") == host }
+    if match
+      puts [match["id"], match["state"]].join(" ")
+    else
+      puts " "
+    end
+  ')"
+
+  if [[ -n "$provider_id" && "$provider_state" == "EMAIL_PROVIDER_ACTIVE" ]]; then
+    echo "Zitadel SMTP already configured."
+    return 0
+  fi
+
+  if [[ -n "$provider_id" ]]; then
+    curl -sf -X POST "${ZITADEL_URL}/admin/v1/email/${provider_id}/_activate" "${zitadel_auth_header[@]}" -d '{}' >/dev/null
+    echo "Zitadel SMTP provider activated."
+    return 0
+  fi
+
+  echo "Creating Zitadel SMTP provider (MailCatcher)..."
+  local created
+  created="$(curl -sf -X POST "${ZITADEL_URL}/admin/v1/email/smtp" "${zitadel_auth_header[@]}" -d @- <<EOF
+{
+  "senderAddress": "${SMTP_FROM}",
+  "senderName": "${SMTP_FROM_NAME}",
+  "host": "${SMTP_HOST}",
+  "tls": ${SMTP_TLS},
+  "none": {}
+}
+EOF
+)"
+  provider_id="$(echo "$created" | ruby -rjson -e 'puts JSON.parse(STDIN.read).fetch("id")')"
+  curl -sf -X POST "${ZITADEL_URL}/admin/v1/email/${provider_id}/_activate" "${zitadel_auth_header[@]}" -d '{}' >/dev/null
+}
+
+setup_zitadel_oidc() {
+  load_zitadel_pat
+
+  echo "Creating Zitadel OIDC application..."
+  local projects project_id apps existing_app_id app_json client_id client_secret
+  projects="$(curl -sf "${ZITADEL_URL}/management/v1/projects/_search" "${zitadel_auth_header[@]}" -d '{"queries":[]}')"
+  project_id="$(echo "$projects" | ruby -rjson -e "puts JSON.parse(STDIN.read).fetch('result', []).find { |p| p['name'] == ARGV[0] }&.fetch('id', '') || ''" "$PROJECT_NAME")"
+
+  if [[ -z "$project_id" ]]; then
+    project_id="$(curl -sf -X POST "${ZITADEL_URL}/management/v1/projects" "${zitadel_auth_header[@]}" -d "{\"name\":\"${PROJECT_NAME}\"}" | ruby -rjson -e 'puts JSON.parse(STDIN.read).fetch("id")')"
+  fi
+
+  apps="$(curl -sf -X POST "${ZITADEL_URL}/management/v1/projects/${project_id}/apps/_search" "${zitadel_auth_header[@]}" -d '{"queries":[]}')"
+  existing_app_id="$(echo "$apps" | ruby -rjson -e "puts JSON.parse(STDIN.read).fetch('result', []).find { |a| a['name'] == ARGV[0] }&.fetch('id', '') || ''" "$APP_NAME")"
+  if [[ -n "$existing_app_id" ]]; then
+    curl -sf -X DELETE "${ZITADEL_URL}/management/v1/projects/${project_id}/apps/${existing_app_id}" "${zitadel_auth_header[@]}" >/dev/null
+  fi
+
+  app_json="$(curl -sf -X POST "${ZITADEL_URL}/management/v1/projects/${project_id}/apps/oidc" "${zitadel_auth_header[@]}" -d @- <<EOF
+{
+  "name": "${APP_NAME}",
+  "redirectUris": ["${REDIRECT_URI}"],
+  "responseTypes": ["OIDC_RESPONSE_TYPE_CODE"],
+  "grantTypes": ["OIDC_GRANT_TYPE_AUTHORIZATION_CODE", "OIDC_GRANT_TYPE_REFRESH_TOKEN"],
+  "appType": "OIDC_APP_TYPE_WEB",
+  "authMethodType": "OIDC_AUTH_METHOD_TYPE_BASIC",
+  "postLogoutRedirectUris": ["http://localhost:3000/"],
+  "version": "OIDC_VERSION_1_0",
+  "devMode": true,
+  "accessTokenType": "OIDC_TOKEN_TYPE_BEARER"
+}
+EOF
+)"
+  client_id="$(echo "$app_json" | ruby -rjson -e 'puts JSON.parse(STDIN.read).fetch("clientId")')"
+  client_secret="$(echo "$app_json" | ruby -rjson -e 'puts JSON.parse(STDIN.read).fetch("clientSecret")')"
+
+  upsert_env() {
+    local key="$1" value="$2"
+    if [[ -f "$ENV_FILE" ]] && grep -q "^${key}=" "$ENV_FILE"; then
+      sed -i "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
+    else
+      echo "${key}=${value}" >> "$ENV_FILE"
+    fi
+  }
+
+  touch "$ENV_FILE"
+  upsert_env OIDC_ISSUER "http://localhost:8080"
+  upsert_env OIDC_ISSUER_INTERNAL "http://zitadel:8080"
+  upsert_env OIDC_REDIRECT_URI "$REDIRECT_URI"
+  upsert_env OIDC_CLIENT_ID "$client_id"
+  upsert_env OIDC_CLIENT_SECRET "$client_secret"
+  echo "Wrote ${ENV_FILE}"
+}
+
+wait_for_zitadel_pat() {
+  echo "Waiting for Zitadel admin PAT at ${PAT_FILE}..."
+  local max_wait="${ZITADEL_PAT_MAX_WAIT:-180}"
+  local i
+  for ((i = 1; i <= max_wait; i++)); do
+    if [[ -s "$PAT_FILE" ]]; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "Zitadel did not write ${PAT_FILE}. First boot can take 1–2 minutes — retry in a moment." >&2
+  exit 1
+}
+
+wait_for_zitadel_admin_api() {
+  echo "Waiting for Zitadel admin API..."
+  local max_wait="${ZITADEL_ADMIN_MAX_WAIT:-120}"
+  local i pat
+  pat="$(tr -d '[:space:]' < "$PAT_FILE")"
+  zitadel_host_header
+  for ((i = 1; i <= max_wait; i++)); do
+    if curl -sf "${ZITADEL_URL}/admin/v1/email/_search" "${zitadel_instance_host[@]}" -H "Authorization: Bearer ${pat}" -H "Content-Type: application/json" -d '{}' >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "Zitadel admin API is not ready. Retry in a moment." >&2
+  exit 1
+}
+
+fresh_zitadel_volume() {
+  ! docker volume inspect "${COMPOSE_PROJECT_NAME:-decidim-user_fields}_zitadel-db-data" >/dev/null 2>&1
+}
+
+prepare_zitadel_bootstrap_files() {
+  if fresh_zitadel_volume; then
+    echo "Fresh Zitadel volume — clearing stale bootstrap files..."
+    rm -f "$PAT_FILE" "$ENV_FILE"
+  fi
+}
+
+reset_decidim_database() {
+  docker compose --profile dev run --rm decidim bash -c "
+    cd ${DUMMY_APP} &&
+    export DISABLE_DATABASE_ENVIRONMENT_CHECK=1 &&
+    export DISABLE_SPRING=1 &&
+    bundle exec rails db:drop db:create db:schema:load
+  "
+}
+
+echo "==> [1/5] Starting infrastructure..."
+prepare_zitadel_bootstrap_files
+docker compose up -d zitadel-db mailcatcher zitadel user-fields-pg
+wait_for_zitadel
+wait_for_zitadel_pat
+wait_for_zitadel_admin_api
+
+echo "==> [2/5] Configuring Zitadel..."
+setup_zitadel_smtp
+setup_zitadel_oidc
+
+if [[ ! -d "$DUMMY_APP" ]]; then
+  echo "==> [3/5] Generating dummy Decidim app (one-time, several minutes)..."
+  docker compose --profile dev run --rm decidim bundle exec rake test_app
+else
+  echo "==> [3/5] Dummy Decidim app already present."
+fi
+
+echo "==> [4/5] Preparing database + openid_connect secrets..."
+docker compose --profile dev run --rm decidim bash -c "
+  cd ${DUMMY_APP} &&
+  bundle exec rake decidim_custom_user_fields:dev:prepare_secrets &&
+  bundle check || bundle install -j \$(nproc)
+"
+reset_decidim_database
+
+echo "==> [5/5] Seeding Decidim org with Zitadel + scenario customizations..."
+docker compose --profile dev run --rm decidim bash -c "
+  cd ${DUMMY_APP} &&
+  export DISABLE_SPRING=1 &&
+  bundle exec rake decidim_custom_user_fields:dev:seed
+"
+
+cat <<EOF
+
+Local OIDC environment ready.
+
+  Decidim:         http://localhost:3000
+  Zitadel console: http://localhost:8080
+  MailCatcher:     http://localhost:1080
+
+  Decidim admin:   admin@example.org / decidim123456789
+  Zitadel admin:   admin@zitadel.localhost / Password1!
+
+  Scenario: ${DEV_CUSTOMIZATION:-association}
+
+Try OIDC sign-in:
+  1. http://localhost:8080 — create a test user (Users → New)
+  2. http://localhost:3000/users/sign_in — click **Zitadel**
+
+Reset: docker compose down -v && ./bin/dev-oidc-up
+
+Starting Decidim (foreground; Ctrl+C stops the app only)...
+
+EOF
+
+# Use the same `compose run --service-ports` path as seed one-shots.
+# `compose --profile web up web` often fails here with a stale network ID after
+# several `compose run` containers (daemon: network … not found).
+exec docker compose --profile dev run --rm --service-ports decidim bash -c "
+  cd ${DUMMY_APP} &&
+  rm -f tmp/pids/server.pid &&
+  bundle check || bundle install -j \$(nproc) &&
+  bundle exec rails server -b 0.0.0.0 -p 3000
+"

@@ -18,6 +18,7 @@ module Decidim
         include_form(Decidim::AccountForm)
         prepend_to(Decidim::CreateRegistration, Command)
         prepend_to(Decidim::CreateOmniauthRegistration, OmniauthCommand)
+        prepend_to(Decidim::Devise::OmniauthRegistrationsController, OmniauthRegistrationsController)
         prepend_to(Decidim::UpdateAccount, Command)
         prepend_to(Decidim::Devise::InvitationsController, InvitationAcceptExtendedData)
       end

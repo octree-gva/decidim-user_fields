@@ -40,10 +40,12 @@ module Decidim
         def register_middleware!
           return unless enabled?
 
+          configure_zitadel_http_clients!
+
           Rails.application.config.middleware.use OmniAuth::Builder do
             provider(
               :openid_connect,
-              setup: provider_setup
+              setup: Decidim::CustomUserFields::Dev::OpenidConnectSetup.provider_setup
             )
           end
         end
@@ -68,6 +70,27 @@ module Decidim
             end
 
             env["omniauth.strategy"]
+          end
+        end
+
+        # Zitadel resolves the instance from the HTTP Host header (ExternalDomain=localhost).
+        # Server-side calls use the Docker service name in the URL but must send Host: localhost:8080.
+        def configure_zitadel_http_clients!
+          host_header = { "Host" => zitadel_public_host }
+
+          Rack::OAuth2.http_config do |faraday|
+            faraday.headers.update(host_header)
+          end
+
+          OpenIDConnect.http_config do |faraday|
+            faraday.headers.update(host_header)
+          end
+        end
+
+        def zitadel_public_host
+          ENV.fetch("ZITADEL_PUBLIC_HOST") do
+            uri = URI.parse(ENV.fetch("OIDC_ISSUER", "http://localhost:8080"))
+            uri.port == uri.default_port ? uri.host : "#{uri.host}:#{uri.port}"
           end
         end
       end

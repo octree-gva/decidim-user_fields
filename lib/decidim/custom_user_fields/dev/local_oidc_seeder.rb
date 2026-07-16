@@ -7,7 +7,7 @@ module Decidim
     module Dev
       # Configures the demo organization for local OIDC + scenario customizations.
       class LocalOidcSeeder
-        DEFAULT_CUSTOMIZATION = :gland
+        DEFAULT_CUSTOMIZATION = :association
 
         def self.call(**options)
           new(**options).call
@@ -25,7 +25,7 @@ module Decidim
 
         def call
           register_scenarios!
-          organization = find_organization!
+          organization = ensure_organization!
           apply_oidc_settings!(organization)
           enable_customization!(organization)
           enable_authorizations!(organization)
@@ -48,45 +48,55 @@ module Decidim
           Decidim::CustomUserFields::ScenarioCustomizations.register!
         end
 
-        def find_organization!
-          Decidim::Organization.find_by!(host: organization_host)
-        rescue ActiveRecord::RecordNotFound
-          raise "No organization with host=#{organization_host}. Run: rails db:seed"
+        def ensure_organization!
+          Decidim::Organization.find_by(host: organization_host) || Bootstrap.call(organization_host:)
         end
 
         def apply_oidc_settings!(organization)
           env = load_oidc_env
           settings = organization.omniauth_settings || {}
-          issuer = env.fetch("OIDC_ISSUER")
+          public_issuer = env.fetch("OIDC_ISSUER")
+          internal_issuer = env.fetch("OIDC_ISSUER_INTERNAL", public_issuer)
           redirect_uri = env.fetch("OIDC_REDIRECT_URI")
           client_id = env.fetch("OIDC_CLIENT_ID")
           client_secret = env.fetch("OIDC_CLIENT_SECRET")
-          uri = URI.parse(issuer)
+          internal_uri = URI.parse(internal_issuer)
+          public_uri = URI.parse(public_issuer)
 
           settings.merge!(
             "omniauth_settings_openid_connect_enabled" => true,
             "omniauth_settings_openid_connect_name" => "Zitadel",
             "omniauth_settings_openid_connect_scope" => "openid email profile",
-            "omniauth_settings_openid_connect_issuer" => issuer,
+            "omniauth_settings_openid_connect_issuer" => public_issuer,
             "omniauth_settings_openid_connect_uid_field" => "sub",
             "omniauth_settings_openid_connect_response_type" => "code",
             "omniauth_settings_openid_connect_discovery" => false,
-            "omniauth_settings_openid_connect_icon" => "shield-keyhole-line",
-            "omniauth_settings_openid_connect_client_options__host" => uri.host,
-            "omniauth_settings_openid_connect_client_options__port" => uri.port.to_s,
-            "omniauth_settings_openid_connect_client_options__scheme" => uri.scheme,
+            "omniauth_settings_openid_connect_icon" => "phone-line",
+            "omniauth_settings_openid_connect_client_options__host" => public_uri.host,
+            "omniauth_settings_openid_connect_client_options__port" => public_uri.port.to_s,
+            "omniauth_settings_openid_connect_client_options__scheme" => public_uri.scheme,
             "omniauth_settings_openid_connect_client_options__identifier" => client_id,
-            "omniauth_settings_openid_connect_client_options__secret" =>
-              Decidim::AttributeEncryptor.encrypt(client_secret),
+            "omniauth_settings_openid_connect_client_options__secret" => client_secret,
             "omniauth_settings_openid_connect_client_options__redirect_uri" => redirect_uri,
-            "omniauth_settings_openid_connect_client_options__authorization_endpoint" => "#{issuer}/oauth/v2/authorize",
-            "omniauth_settings_openid_connect_client_options__token_endpoint" => "#{issuer}/oauth/v2/token",
-            "omniauth_settings_openid_connect_client_options__userinfo_endpoint" => "#{issuer}/oidc/v1/userinfo",
-            "omniauth_settings_openid_connect_client_options__jwks_uri" => "#{issuer}/oauth/v2/keys",
-            "omniauth_settings_openid_connect_client_options__end_session_endpoint" => "#{issuer}/oidc/v1/end_session"
+            "omniauth_settings_openid_connect_client_options__authorization_endpoint" =>
+              "#{public_issuer}/oauth/v2/authorize",
+            "omniauth_settings_openid_connect_client_options__token_endpoint" =>
+              "#{internal_issuer}/oauth/v2/token",
+            "omniauth_settings_openid_connect_client_options__userinfo_endpoint" =>
+              "#{internal_issuer}/oidc/v1/userinfo",
+            "omniauth_settings_openid_connect_client_options__jwks_uri" =>
+              "#{internal_issuer}/oauth/v2/keys",
+            "omniauth_settings_openid_connect_client_options__end_session_endpoint" =>
+              "#{public_issuer}/oidc/v1/end_session"
           )
 
-          organization.update!(omniauth_settings: settings)
+          organization.update!(omniauth_settings: encrypt_omniauth_settings(settings))
+        end
+
+        def encrypt_omniauth_settings(settings)
+          settings.transform_values do |value|
+            Decidim::OmniauthProvider.value_defined?(value) ? Decidim::AttributeEncryptor.encrypt(value) : value
+          end
         end
 
         def enable_customization!(organization)
@@ -102,13 +112,14 @@ module Decidim
           handlers = Decidim::CustomUserFields::Verifications.workflow_handlers_for(customization)
           return if handlers.empty?
 
+          current = Array(organization.available_authorizations)
           organization.update!(
-            available_authorizations: (organization.available_authorizations + handlers).uniq
+            available_authorizations: (current + handlers).uniq
           )
         end
 
         def load_oidc_env
-          raise "Missing #{oidc_env_path}. Run: ./bin/setup-zitadel-oidc" unless oidc_env_path.file?
+          raise "Missing #{oidc_env_path}. Run: ./bin/dev-oidc-up" unless oidc_env_path.file?
 
           oidc_env_path.each_line.with_object({}) do |line, env|
             next if line.strip.empty? || line.start_with?("#")

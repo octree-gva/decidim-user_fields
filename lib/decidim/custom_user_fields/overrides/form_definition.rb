@@ -29,7 +29,8 @@ module Decidim
 
       def map_model(model)
         extended_data = (model.extended_data || {}).with_indifferent_access
-        active_names = active_custom_field_names
+        org = try(:current_organization) || model.try(:organization)
+        active_names = org ? RegistrationFields.active_registration_fields(org).map(&:name) : []
         RegistrationFields.all_registration_fields.each do |field_def|
           next unless active_names.include?(field_def.name)
 

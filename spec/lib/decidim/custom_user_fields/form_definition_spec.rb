@@ -80,6 +80,27 @@ describe Decidim::CustomUserFields::FormDefinition do
     end
   end
 
+  it "maps extended_data using model.organization when form context is missing" do
+    with_customizations do
+      organization = create(:organization)
+      register_test_customization(:default) do |customization|
+        customization.registration_fields { |set| set.add_field(:flag, type: :boolean, required: true) }
+      end
+      enable_customization_for(organization, :default)
+
+      klass = Class.new(form_class) do
+        include Decidim::CustomUserFields::FormDefinition
+      end
+
+      model = Struct.new(:extended_data, :organization).new({ default_flag: true }, organization)
+      form = klass.new(organization: nil)
+
+      form.map_model(model)
+
+      expect(form[:default_flag]).to be(true)
+    end
+  end
+
   it "ignores missing extended_data keys for active fields" do
     with_customizations do
       organization = create(:organization)

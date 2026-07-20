@@ -58,6 +58,25 @@ describe Decidim::CustomUserFields::Verifications::VerificationForm do
       expect { form.metadata }.not_to raise_error
       expect(Decidim::User).not_to have_received(:new)
     end
+
+    it "does not re-instantiate Decidim::User when materializing attributes" do
+      form = subject
+      allow(Decidim::User).to receive(:new).and_call_original
+
+      expect { form.attributes }.not_to raise_error
+      expect(form.attributes["user"]).to eq(user)
+      expect(Decidim::User).not_to have_received(:new)
+    end
+
+    it "does not re-instantiate Decidim::User when rendering hidden fields" do
+      form = subject
+      template = ActionView::Base.new(ActionView::LookupContext.new([]), {}, nil)
+      builder = ActionView::Helpers::FormBuilder.new(:authorization, form, template, {})
+      allow(Decidim::User).to receive(:new).and_call_original
+
+      expect { builder.hidden_field(:handler_name) }.not_to raise_error
+      expect(Decidim::User).not_to have_received(:new)
+    end
   end
 
   describe "validations" do

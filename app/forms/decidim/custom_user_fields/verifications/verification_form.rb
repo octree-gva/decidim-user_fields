@@ -7,6 +7,10 @@ module Decidim
         include ActionView::Helpers::SanitizeHelper
         include ActiveModel::Validations::Callbacks
 
+        # Identity cast: parent `attribute :user, Decidim::User` re-instantiates via
+        # Decidim::Attributes::Model and breaks STI under reload when views materialize attributes.
+        attribute :user
+
         before_validation :sanitize_values
         validate :custom_field_validation
 
@@ -51,10 +55,6 @@ module Decidim
           fields.to_h { |f| [f.name, self[f.name]] }.with_indifferent_access
         end
 
-        def form_user
-          @attributes["user"].value_before_type_cast
-        end
-
         def sanitize_values
           fields.each do |field|
             key = field.name
@@ -73,7 +73,6 @@ module Decidim
         end
 
         def save_extended_data!
-          user = form_user
           extended_data = user.extended_data.with_indifferent_access
           extra_fields.reject { |field| field.options[:skip_update_on_verified] }.each do |field|
             extended_data[field.storage_name] = field.sanitized_value(self[field.name])

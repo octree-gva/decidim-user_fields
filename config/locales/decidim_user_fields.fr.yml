@@ -3,6 +3,9 @@ fr:
     custom_user_fields:
       system:
         customizations_tab: "Champs utilisateur"
+        first_login_mode:
+          prompt_authorization: "Demander une autorisation"
+          none: "Aucun"
         customizations:
           incompatible_authorizations: "Incompatible avec les autorisations activées : %{authorizations}"
           unknown_customization: "Personnalisation inconnue : %{name}"

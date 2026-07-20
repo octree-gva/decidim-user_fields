@@ -22,9 +22,23 @@ module Decidim
         confirmed_at
       ).freeze
 
+      FIRST_LOGIN_MODES = %w(prompt_authorization none).freeze
+      DEFAULT_FIRST_LOGIN_MODE = "prompt_authorization"
+
       class << self
         def reserved_key?(name)
           RESERVED_EXTENDED_DATA_KEYS.include?(name.to_s)
+        end
+
+        def first_login_mode(organization)
+          value = raw_toggle_config(organization)[:first_login_mode].presence
+          return DEFAULT_FIRST_LOGIN_MODE if value.blank? || FIRST_LOGIN_MODES.exclude?(value.to_s)
+
+          value.to_s
+        end
+
+        def prompt_authorization_on_first_login?(organization)
+          first_login_mode(organization) == DEFAULT_FIRST_LOGIN_MODE
         end
 
         def enabled_customization_names(organization)

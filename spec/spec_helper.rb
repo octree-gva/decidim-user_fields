@@ -16,6 +16,7 @@ require "decidim/user_fields"
 require "support/customization_helpers"
 require "support/scenario_customizations"
 require "support/system_customization_helpers"
+require "support/favicon_route"
 
 I18n.available_locales = (I18n.available_locales.map(&:to_sym) | [:en, :ca, :es, :fr]).uniq
 Rails.application.config.i18n.available_locales = I18n.available_locales

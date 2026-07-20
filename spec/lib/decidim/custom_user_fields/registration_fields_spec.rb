@@ -101,4 +101,34 @@ describe Decidim::CustomUserFields::RegistrationFields do
       end
     end
   end
+
+  describe ".first_login_mode" do
+    it "defaults to prompt_authorization when unset" do
+      expect(described_class.first_login_mode(organization)).to eq("prompt_authorization")
+    end
+
+    it "returns the configured mode" do
+      Decidim::Toggle.save_config!(organization, :custom_user_fields, { "first_login_mode" => "none" }, merge: false)
+
+      expect(described_class.first_login_mode(organization)).to eq("none")
+    end
+
+    it "falls back to prompt_authorization for unknown values" do
+      Decidim::Toggle.save_config!(organization, :custom_user_fields, { "first_login_mode" => "bogus" }, merge: false)
+
+      expect(described_class.first_login_mode(organization)).to eq("prompt_authorization")
+    end
+  end
+
+  describe ".prompt_authorization_on_first_login?" do
+    it "is true by default" do
+      expect(described_class.prompt_authorization_on_first_login?(organization)).to be(true)
+    end
+
+    it "is false when mode is none" do
+      Decidim::Toggle.save_config!(organization, :custom_user_fields, { "first_login_mode" => "none" }, merge: false)
+
+      expect(described_class.prompt_authorization_on_first_login?(organization)).to be(false)
+    end
+  end
 end

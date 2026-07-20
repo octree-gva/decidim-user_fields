@@ -4,7 +4,7 @@ require "spec_helper"
 
 describe "System organization customizations toggle", :custom_user_fields_scenarios do
   let(:admin) { create(:admin) }
-  let!(:organization) { create(:organization, available_authorizations: [], omniauth_settings: nil) }
+  let!(:organization) { create(:organization, available_authorizations: [], omniauth_settings: nil, favicon: nil) }
 
   before do
     # System layout renders the public login modal. Keep providers empty so OIDC
@@ -92,5 +92,20 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
       expect(page).to have_content("18 plus")
       expect(page).to have_content("Association only")
     end
+  end
+
+  it "persists first_login_mode from the user fields tab" do
+    within_customizations_tab do
+      choose "None"
+      click_on "Save"
+    end
+
+    settings_updated_successfully!
+
+    config = Decidim::Toggle::OrganizationModuleConfig.find_by!(
+      decidim_organization_id: organization.id,
+      module_name: "custom_user_fields"
+    ).config
+    expect(config.with_indifferent_access[:first_login_mode]).to eq("none")
   end
 end

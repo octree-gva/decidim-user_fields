@@ -3,7 +3,7 @@
 require "spec_helper"
 
 describe "Custom user fields registration", :custom_user_fields_scenarios do
-  let!(:organization) { create(:organization) }
+  let!(:organization) { create(:organization, favicon: nil) }
   let!(:terms_of_service_page) { Decidim::StaticPage.find_by(slug: "terms-of-service", organization:) }
 
   before do

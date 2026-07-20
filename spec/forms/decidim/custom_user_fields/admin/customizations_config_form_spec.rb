@@ -59,5 +59,36 @@ describe Decidim::CustomUserFields::Admin::CustomizationsConfigForm do
         expect(form).to be_valid
       end
     end
+
+    it "accepts a valid first_login_mode" do
+      with_customizations do
+        register_test_customization(:community)
+
+        form = described_class.from_params(
+          organization: { first_login_mode: "none", community_enabled: false }
+        ).with_context(current_organization: organization)
+
+        expect(form).to be_valid
+        expect(form.first_login_mode).to eq("none")
+      end
+    end
+
+    it "rejects an invalid first_login_mode" do
+      with_customizations do
+        register_test_customization(:community)
+
+        form = described_class.from_params(
+          organization: { first_login_mode: "bogus" }
+        ).with_context(current_organization: organization)
+
+        expect(form).not_to be_valid
+      end
+    end
+  end
+
+  describe ".collection_for_first_login_mode" do
+    it "returns prompt_authorization and none options" do
+      expect(described_class.collection_for_first_login_mode.map(&:first)).to eq(%w(prompt_authorization none))
+    end
   end
 end

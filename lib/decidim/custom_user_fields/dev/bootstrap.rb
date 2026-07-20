@@ -20,6 +20,7 @@ module Decidim
           organization = ensure_organization!
           ensure_terms_of_service!(organization)
           ensure_admin!(organization)
+          ensure_system_admin!
           organization
         end
 
@@ -77,6 +78,16 @@ module Decidim
             accepted_tos_version: organization.tos_version,
             newsletter_notifications_at: Time.current,
             locale: organization.default_locale
+          )
+          user.save!
+          user
+        end
+
+        def ensure_system_admin!
+          user = Decidim::System::Admin.find_or_initialize_by(email: "system@example.org")
+          user.assign_attributes(
+            password: "decidim123456789",
+            password_confirmation: "decidim123456789",
           )
           user.save!
           user

@@ -51,6 +51,7 @@ module Decidim
       def invalid_invitation_resource(errors)
         resource = resource_class.find_by_invitation_token(invitation_token, true)
         errors.each { |error| resource.errors.add(error.attribute, error.message) }
+        assign_invitation_form_with_errors!(resource, errors)
         resource
       end
 
@@ -68,6 +69,39 @@ module Decidim
 
         errors.each do |error|
           resource.errors.add(error.attribute, error.message)
+        end
+        assign_invitation_form_with_errors!(resource, errors)
+      end
+
+      def assign_invitation_form_with_errors!(resource, errors)
+        @form = invitation_registration_form(resource)
+        merge_invitation_params_into_form!(@form)
+        copy_errors_to_form!(@form, errors)
+      end
+
+      def invitation_registration_form(resource)
+        Decidim::RegistrationForm.from_model(resource).with_context(
+          current_organization: invitation_organization,
+          current_user: try(:current_user),
+          invitation_token: invitation_token
+        )
+      end
+
+      def merge_invitation_params_into_form!(form)
+        return unless params[:user]
+
+        user_params = params[:user].to_unsafe_h.with_indifferent_access if params[:user].respond_to?(:to_unsafe_h)
+        user_params ||= params[:user].to_h.with_indifferent_access
+
+        user_params.each do |key, value|
+          setter = :"#{key}="
+          form.public_send(setter, value) if form.respond_to?(setter)
+        end
+      end
+
+      def copy_errors_to_form!(form, errors)
+        errors.each do |error|
+          form.errors.add(error.attribute, error.message)
         end
       end
     end

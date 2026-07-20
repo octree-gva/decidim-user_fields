@@ -37,4 +37,27 @@ describe "Custom user fields invitation acceptance", :custom_user_fields_scenari
     expect(page).to have_content("Your password was set successfully")
     expect(invited.reload.extended_data["association_represent_association"]).to be(true)
   end
+
+  it "shows validation errors for required custom fields" do
+    invited = Decidim::User.invite!(
+      {
+        email: "private.assembly.invalid@example.org",
+        name: "Private Assembly User",
+        organization:
+      },
+      inviter
+    )
+    create(:assembly_private_user, user: invited, privatable_to: private_assembly)
+
+    visit "/users/invitation/accept?invitation_token=#{invited.raw_invitation_token}"
+
+    fill_in :invitation_user_nickname, with: "private_asm_user"
+    fill_in :invitation_user_password, with: "decidim123456789"
+    check :invitation_user_tos_agreement
+    click_on "Save"
+
+    expect(page).to have_no_content("Your password was set successfully")
+    expect(page).to have_content("This field is required")
+    expect(page).to have_field("invitation_user_association_represent_association")
+  end
 end

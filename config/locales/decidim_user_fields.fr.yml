@@ -2,7 +2,7 @@ fr:
   decidim:
     custom_user_fields:
       system:
-        customizations_tab: "Personnalisations des champs utilisateur"
+        customizations_tab: "Champs utilisateur"
         customizations:
           incompatible_authorizations: "Incompatible avec les autorisations activées : %{authorizations}"
           unknown_customization: "Personnalisation inconnue : %{name}"

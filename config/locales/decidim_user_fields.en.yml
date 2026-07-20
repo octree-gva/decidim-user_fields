@@ -2,7 +2,7 @@ en:
   decidim:
     custom_user_fields:
       system:
-        customizations_tab: "User field customizations"
+        customizations_tab: "User fields"
         customizations:
           incompatible_authorizations: "Incompatible with enabled authorizations: %{authorizations}"
           unknown_customization: "Unknown customization: %{name}"

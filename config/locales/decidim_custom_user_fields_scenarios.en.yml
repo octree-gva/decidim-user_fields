@@ -26,6 +26,7 @@ en:
           label: "Birthdate"
         association_represent_association:
           label: "I represent an association"
+          required: "This field is required"
       twelve_plus:
         birthdate:
           label: "Birthdate"

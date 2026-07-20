@@ -13,12 +13,6 @@ module Decidim
             icon: shield-line
         YAML
 
-        DEVELOPMENT_SNIPPET = <<~YAML
-            openid_connect:
-              enabled: <%= Decidim::Env.new("OMNIAUTH_OPENID_CONNECT_ENABLED", "true").to_boolean_string %>
-              icon: shield-line
-        YAML
-
         def self.call(secrets_path: default_secrets_path)
           new(secrets_path:).call
         end
@@ -36,10 +30,10 @@ module Decidim
           raise "Missing #{secrets_path}. Run: bundle exec rake test_app" unless secrets_path.file?
 
           content = secrets_path.read
-          patched = content
-          status = :skipped
+          patched = strip_root_openid_connect(content)
+          status = patched == content ? :skipped : :patched
 
-          unless content.include?("openid_connect:")
+          unless default_omniauth_has_openid_connect?(patched)
             unless patched.match?(/\n\s*google_oauth2:\n/)
               raise "Could not locate omniauth section in #{secrets_path}"
             end
@@ -51,10 +45,14 @@ module Decidim
             status = :patched
           end
 
-          unless patched.match?(/development:\n(?:.*\n)*?\s*omniauth:\n(?:.*\n)*?\s*openid_connect:/m)
+          unless development_omniauth_has_openid_connect?(patched)
+            unless patched.match?(/^(development:\n(?:.*\n)*?  omniauth:\n(?:.*\n)*?    developer:.*?\n\s+icon:.*?\n)/m)
+              raise "Could not locate development.omniauth.developer in #{secrets_path}"
+            end
+
             patched = patched.sub(
-              /(development:\n(?:.*\n)*?\s*omniauth:\n(?:.*\n)*?\s*developer:.*?\n\s*icon:.*?\n)/m,
-              "\\1#{DEVELOPMENT_SNIPPET}\n"
+              /(^development:\n(?:.*\n)*?  omniauth:\n(?:.*\n)*?    developer:.*?\n\s+icon:.*?\n)/m,
+              "\\1#{indent_snippet}\n"
             )
             status = :patched
           end
@@ -67,8 +65,21 @@ module Decidim
 
         attr_reader :secrets_path
 
-        def indent_snippet
-          SNIPPET.lines.map { |line| line.empty? ? line : "    #{line}" }.join.rstrip
+        def indent_snippet(spaces = 4)
+          prefix = " " * spaces
+          SNIPPET.lines.map { |line| line.empty? ? line : "#{prefix}#{line}" }.join.rstrip
+        end
+
+        def strip_root_openid_connect(content)
+          content.gsub(/^openid_connect:\n(?:  .*\n)*/, "")
+        end
+
+        def default_omniauth_has_openid_connect?(content)
+          content.match?(/^default: &default\n(?:.*\n)*?^  omniauth:\n(?:.*\n)*?^    openid_connect:/m)
+        end
+
+        def development_omniauth_has_openid_connect?(content)
+          content.match?(/^development:\n(?:.*\n)*?^  omniauth:\n(?:.*\n)*?^    openid_connect:/m)
         end
       end
     end

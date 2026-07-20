@@ -21,8 +21,8 @@ task :prepare_tests do
   # Remove previous existing db, and recreate one.
   disable_docker_compose = ENV.fetch("DISABLED_DOCKER_COMPOSE", "false") == "true"
   unless disable_docker_compose
-    sh "docker-compose -f docker-compose.yml down -v"
-    sh "docker-compose -f docker-compose.yml up -d --remove-orphans"
+    sh "docker compose -f docker-compose.yml down -v"
+    sh "docker compose -f docker-compose.yml up -d --remove-orphans"
   end
   ENV["RAILS_ENV"] = "test"
   test_db = {

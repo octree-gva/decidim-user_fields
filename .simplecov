@@ -11,6 +11,9 @@ if ENV["SIMPLECOV"]
     add_filter "/vendor/"
     add_filter "/spec/"
     add_filter "/lib/tasks/"
+    # Local OIDC / bootstrap helpers — development-only, not product surface
+    add_filter "/lib/decidim/custom_user_fields/dev/"
+    add_filter "/lib/decidim/custom_user_fields/version.rb"
     add_filter %r{^/decidim-[^/]*/lib/decidim/[^/]*/engine.rb}
     add_filter %r{^/decidim-[^/]*/lib/decidim/[^/]*/admin-engine.rb}
     add_filter %r{^/decidim-[^/]*/lib/decidim/[^/]*/component.rb}

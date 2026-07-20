@@ -1,0 +1,48 @@
+fr:
+  decidim:
+    authorization_handlers:
+      twelve_plus:
+        name: "12 ans et plus"
+        explanation: "Vérifier que vous avez au moins 12 ans"
+      sixteen_plus:
+        name: "16 ans et plus"
+        explanation: "Vérifier que vous avez au moins 16 ans"
+      eighteen_plus:
+        name: "18 ans et plus"
+        explanation: "Vérifier que vous avez au moins 18 ans"
+      location_validated:
+        name: "Localisation validée"
+        explanation: "Valider vos informations de localisation"
+      association_only:
+        name: "Association uniquement"
+        explanation: "Réservé aux représentants d'association"
+    custom_user_fields:
+      customizations:
+        birthdate_age_gates: "Contrôles d'âge par date de naissance"
+        location_validation: "Validation de localisation"
+        association: "Représentant d'association"
+      extended_data:
+        birthdate_age_gates_birthdate:
+          label: "Date de naissance"
+        association_represent_association:
+          label: "Je représente une association"
+          required: "Ce champ est obligatoire"
+      twelve_plus:
+        birthdate:
+          label: "Date de naissance"
+      sixteen_plus:
+        birthdate:
+          label: "Date de naissance"
+      eighteen_plus:
+        birthdate:
+          label: "Date de naissance"
+      location_validated:
+        birthdate:
+          label: "Date de naissance (JJ.MM.AAAA)"
+        postal_code:
+          label: "Code postal"
+        full_name:
+          label: "Nom complet"
+      association_only:
+        represent_association:
+          label: "Je représente une association"

@@ -3,5 +3,8 @@ fr:
     system:
       custom_user_fields:
         first_login_mode: "Mode première connexion"
+        birthdate_age_gates_enabled: "Contrôles d'âge par date de naissance"
+        location_validation_enabled: "Validation de localisation"
+        association_enabled: "Représentant d'association"
         helptext:
           first_login_mode: "Choisir si les participants sont invités à se vérifier après leur première connexion. Les autorisations restent disponibles lorsque les actions les exigent."

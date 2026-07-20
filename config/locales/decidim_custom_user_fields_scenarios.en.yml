@@ -43,3 +43,6 @@ en:
           label: "Postal code"
         full_name:
           label: "Full name"
+      association_only:
+        represent_association:
+          label: "I represent an association"

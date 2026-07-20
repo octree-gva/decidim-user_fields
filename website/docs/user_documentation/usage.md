@@ -57,71 +57,80 @@ parameters:
 
 
 ### Labels
-Labels are translated and are under the translation scope `decidim.custom_user_fields`. 
-Example of a `config/locales/fr.yml` file:
+
+Labels are translated under `decidim.custom_user_fields` (fields) and `decidim.authorization_handlers` (workflows).
+Registration fields are **prefixed** with the customization name (for example `:community` + `:social_url` → `community_social_url` under `extended_data`).
+Admin toggle checkboxes use `decidim_toggle.system.custom_user_fields.<name>_enabled`.
+
+See the [Translate](../dev_documentation/locales.md) page for the full required key list and how to run `i18n-tasks missing`.
+
+Example:
 
 ```yml
 fr:
+  decidim_toggle:
+    system:
+      custom_user_fields:
+        community_enabled: "Communauté"
   decidim:
     authorization_handlers:
-      pb2024:
-        name: "Données de rescencement pour le Budget Participatif 2024"
-        explanation: "Donnée récoltée pour participer au BP 2024"
+      ngo_verify:
+        name: "Vérification ONG"
+        explanation: "Valider le compte organisation"
     custom_user_fields:
+      customizations:
+        community: "Communauté"
       extended_data:
-        first_name:
-          label: "Prénoms"
-        last_name:
-          label: "Nom de famille"
-      pb2024:
-        birthdate:
-          label: "Date de naissance"
-          help_text: "La participation est réservée aux personnes de plus de 18ans"
-        postal_code:
-          label: "Code postal"
-          help_text: "La participation est réservée aux habitants de MaCommune.
+        community_social_url:
+          label: "URL réseau social"
+      ngo_verify:
+        organization_name:
+          label: "Nom de l'organisation"
 ```
 
 # Create an authorization with custom fields
 
 ```ruby
-Decidim::CustomUserFields.register_field_set :pb2024_profile do |set|
-  set.add_field :first_name, type: :text, required: false
-  set.add_field :last_name, type: :text, required: false
-end
+Decidim::CustomUserFields.register_customization :pb2024_profile do |customization|
+  customization.registration_fields do |set|
+    set.add_field :first_name, type: :text, required: false
+    set.add_field :last_name, type: :text, required: false
+  end
 
-Rails.application.config.after_initialize do
-  Decidim::CustomUserFields::Verifications.register("PB2024") do |config|
-    config.field_set :pb2024_profile
-    config.add_field :first_name, type: :extra_field_ref, required: true, skip_hashing: true, hide_if_value: true
-    config.add_field :last_name, type: :extra_field_ref, required: true, skip_hashing: true, hide_if_value: true
+  customization.authorization "PB2024" do |config|
+    config.add_field :first_name, type: :extra_field_ref, ref: :first_name, required: true, skip_hashing: true, hide_if_value: true
+    config.add_field :last_name, type: :extra_field_ref, ref: :last_name, required: true, skip_hashing: true, hide_if_value: true
     config.add_field :birthdate, type: :date, required: true, not_after: 18.years.ago.to_date.iso8601
     config.add_field :postal_code, type: :text, required: true, format: /\A[\-0-9]*\z/, values_in: ["2000", "2001", "2002"]
   end
 end
-
 ```
 
-Then, add locales for this flow: 
+Then add locales for this flow (see [Translate](../dev_documentation/locales.md) for every required key):
+
 ```yml
 fr:
+  decidim_toggle:
+    system:
+      custom_user_fields:
+        pb2024_profile_enabled: "Profil BP 2024"
   decidim:
     authorization_handlers:
       pb2024:
         name: "Participer au BP 2024"
         explanation: "Valider votre compte"
     custom_user_fields:
-      first_name:
-        label: Prénoms
-        help_text: Ce champs est requis pour participer aux budgets participatif.
-      last_name: 
-        label: Nom de famille
-    pb2024:
-      birthdate:
-        label: Date de naissance
-        bad_not_after: Seul les > 18 peuvent participer
-      postal_code:
-        label: Code postal
-        bad_values: Ce code postal est inconu dans  maCommune
-        help_text: Seul les communies prêt de maCommune peux être acceptée
+      customizations:
+        pb2024_profile: "Profil BP 2024"
+      extended_data:
+        pb2024_profile_first_name:
+          label: Prénoms
+        pb2024_profile_last_name:
+          label: Nom de famille
+      pb2024:
+        birthdate:
+          label: Date de naissance
+          bad_not_after: Seul les > 18 peuvent participer
+        postal_code:
+          label: Code postal
 ```

@@ -19,6 +19,7 @@ services:
       - RAILS_ENV=development
       - DISABLE_SPRING=1
       - DECIDIM_HOST=localhost
+      - ENGINE_ROOT=/home/module
       - ZITADEL_OIDC_ENABLED=1
       - ZITADEL_PUBLIC_HOST=localhost:8080
       - OMNIAUTH_OPENID_CONNECT_ENABLED=true

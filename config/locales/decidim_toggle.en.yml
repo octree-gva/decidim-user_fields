@@ -3,5 +3,8 @@ en:
     system:
       custom_user_fields:
         first_login_mode: "First login mode"
+        birthdate_age_gates_enabled: "Birthdate age gates"
+        location_validation_enabled: "Location validation"
+        association_enabled: "Association representative"
         helptext:
           first_login_mode: "Choose whether participants are prompted to verify after their first sign-in. Authorizations remain available when actions require them."

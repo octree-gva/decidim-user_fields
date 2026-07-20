@@ -32,6 +32,7 @@ This Decidim module adds custom user fields through a configuration file and wit
 
 > Are you on GitHub ? Please use the reference repository on [GitLab for issues and pull requests](https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-user_fields).
 
+All the information to use the gem is on our [documentation website](https://octree-gva.github.io/decidim-user_fields)
 
 ## Install the module
 Add the gems to your Gemfile
@@ -72,7 +73,10 @@ Decidim::CustomUserFields.register_customization :ngos do |customization|
 end
 ```
 
-Customization labels for the admin toggles: `decidim.custom_user_fields.customizations.<name>`.
+Admin toggle labels: `decidim_toggle.system.custom_user_fields.<name>_enabled`.
+Customization display labels (`Customization#label`): `decidim.custom_user_fields.customizations.<name>`.
+
+Full key list and how to run `i18n-tasks missing` (customization registry scanner): see the [Translate](https://octree-gva.github.io/decidim-user_fields/dev_documentation/locales) docs page.
 
 Sysadmins enable or disable whole customizations per organization; authorizations bundled in a customization are toggled together with it.
 

@@ -17,6 +17,10 @@ require "support/customization_helpers"
 require "support/scenario_customizations"
 require "support/system_customization_helpers"
 
+I18n.available_locales = (I18n.available_locales.map(&:to_sym) | [:en, :ca, :es, :fr]).uniq
+Rails.application.config.i18n.available_locales = I18n.available_locales
+Decidim.available_locales = I18n.available_locales.map(&:to_s) if Decidim.respond_to?(:available_locales=)
+
 Rails.application.config.to_prepare do
   Decidim::CustomUserFields::ScenarioCustomizations.register!
 end

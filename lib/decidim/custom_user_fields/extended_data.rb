@@ -9,7 +9,7 @@ module Decidim
         params = params.to_h.with_indifferent_access
         active_registration_fields(organization).each do |field_def|
           key = field_def.name
-          next unless params.key?(key.to_s) || params.key?(key)
+          next unless params.has_key?(key.to_s) || params.has_key?(key)
 
           raw = params[key.to_s] || params[key]
           value = field_def.sanitized_value(raw)
@@ -23,7 +23,7 @@ module Decidim
         data = {}
         active_registration_fields(organization).each do |field_def|
           key = field_def.name
-          next unless params.key?(key.to_s) || params.key?(key)
+          next unless params.has_key?(key.to_s) || params.has_key?(key)
 
           raw = params[key.to_s] || params[key]
           data[key] = field_def.sanitized_value(raw)

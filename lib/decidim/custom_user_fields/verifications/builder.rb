@@ -27,9 +27,7 @@ module Decidim
 
         def add_field(field_name, field_definition)
           field_def = FieldDefinition.new(field_name, field_definition, handler_name)
-          if field_def.type == :extra_field_ref
-            field_def.field.customization_name = @customization
-          end
+          field_def.field.customization_name = @customization if field_def.type == :extra_field_ref
           fields.push(field_def)
         end
 

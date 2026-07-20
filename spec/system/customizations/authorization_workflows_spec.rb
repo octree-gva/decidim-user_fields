@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe "Scenario authorization workflows", :custom_user_fields_scenarios, type: :system do
+describe "Scenario authorization workflows", :custom_user_fields_scenarios do
   let(:organization) { create(:organization, available_authorizations: %w(twelve_plus eighteen_plus location_validated association_only)) }
   let(:user) { create(:user, :confirmed, organization:) }
 

@@ -7,12 +7,7 @@ module Decidim
         def configure_form(form)
           form.attribute(name, :boolean)
           validations = {}
-          if options[:must_be_true]
-            validations[:inclusion] = {
-              in: [true, "1", 1, "true"],
-              message: proc { label(:required) }
-            }
-          elsif required?
+          if options[:must_be_true] || required?
             validations[:inclusion] = {
               in: [true, "1", 1, "true"],
               message: proc { label(:required) }

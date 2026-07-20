@@ -34,8 +34,8 @@ module Decidim
         end
       end
 
-      def self.register(verification_name, customization: nil)
-        builder = Decidim::CustomUserFields::Verifications::Builder.new(verification_name, customization: customization)
+      def self.register(verification_name, customization: nil, &)
+        builder = Decidim::CustomUserFields::Verifications::Builder.new(verification_name, customization:)
         yield builder
         builder.register_workflow!
         if customization

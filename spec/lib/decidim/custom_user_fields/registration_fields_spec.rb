@@ -80,6 +80,7 @@ describe Decidim::CustomUserFields::RegistrationFields do
         end
         enable_customization_for(organization, :community, :ngos)
 
+        expect(described_class.enabled_customization_names(organization)).to eq(%w(community ngos))
         fields = described_class.active_registration_fields(organization)
         expect(fields.map(&:name)).to contain_exactly(:community_foo, :ngos_bar)
       end

@@ -8,8 +8,8 @@ module Decidim
       yield self
     end
 
-    def self.register_customization(name, &block)
-      Customizations.register(name, &block)
+    def self.register_customization(name, &)
+      Customizations.register(name, &)
     end
 
     class Error < StandardError; end

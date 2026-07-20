@@ -38,7 +38,7 @@ module Decidim
 
           return [] if legacy_config_superseded?(raw)
 
-          legacy_name = raw[:"active_field_set"] || raw["active_field_set"]
+          legacy_name = raw[:active_field_set] || raw["active_field_set"]
           legacy_name.present? ? [legacy_name.to_s] : []
         end
 
@@ -65,13 +65,7 @@ module Decidim
         end
 
         def normalize_toggle_config(config)
-          hash = if config.is_a?(Decidim::Toggle::ModuleConfigurationPresenter)
-                   config.to_config_hash
-                 elsif config.respond_to?(:to_config_hash)
-                   config.to_config_hash
-                 else
-                   config
-                 end
+          hash = config.respond_to?(:to_config_hash) ? config.to_config_hash : config
           hash.with_indifferent_access
         end
 

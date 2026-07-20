@@ -19,8 +19,8 @@ Gem::Specification.new do |s|
   s.files = Dir["{app,config,lib}/**/*", "LICENSE-AGPLv3.txt", "Rakefile", "README.md"]
 
   s.add_dependency "decidim-core", Decidim::CustomUserFields.decidim_version
-  s.add_dependency "decidim-verifications", Decidim::CustomUserFields.decidim_version
   s.add_dependency "decidim-toggle", ">= 0.1"
+  s.add_dependency "decidim-verifications", Decidim::CustomUserFields.decidim_version
   s.add_dependency "deface", ">= 1.9"
 
   s.metadata["rubygems_mfa_required"] = "true"

@@ -60,7 +60,7 @@ module Decidim
           redirect_uri = env.fetch("OIDC_REDIRECT_URI")
           client_id = env.fetch("OIDC_CLIENT_ID")
           client_secret = env.fetch("OIDC_CLIENT_SECRET")
-          internal_uri = URI.parse(internal_issuer)
+          URI.parse(internal_issuer)
           public_uri = URI.parse(public_issuer)
 
           settings.merge!(
@@ -121,20 +121,20 @@ module Decidim
         def load_oidc_env
           raise "Missing #{oidc_env_path}. Run: ./bin/dev-oidc-up" unless oidc_env_path.file?
 
-          oidc_env_path.each_line.with_object({}) do |line, env|
+          env = oidc_env_path.each_line.with_object({}) do |line, memo|
             next if line.strip.empty? || line.start_with?("#")
 
             key, value = line.split("=", 2)
-            env[key] = value.to_s.strip
-          end.tap do |env|
-            %w[OIDC_ISSUER OIDC_REDIRECT_URI OIDC_CLIENT_ID OIDC_CLIENT_SECRET].each do |key|
-              raise "Missing #{key} in #{oidc_env_path}" if env[key].blank?
-            end
+            memo[key] = value.to_s.strip
           end
+          %w(OIDC_ISSUER OIDC_REDIRECT_URI OIDC_CLIENT_ID OIDC_CLIENT_SECRET).each do |key|
+            raise "Missing #{key} in #{oidc_env_path}" if env[key].blank?
+          end
+          env
         end
 
         def print_summary(organization)
-          puts <<~MSG
+          Rails.logger.debug { <<~MSG }
 
             decidim_custom_user_fields:dev:seed complete
               Organization: #{organization.name} (#{organization.host})

@@ -30,6 +30,20 @@ describe Decidim::CustomUserFields::Admin::CustomizationsConfigForm do
       end
     end
 
+    it "accepts enabling multiple registered customizations" do
+      with_customizations do
+        register_test_customization(:community)
+        register_test_customization(:ngos)
+
+        form = described_class.from_params(
+          organization: { community_enabled: true, ngos_enabled: true }
+        ).with_context(current_organization: organization)
+
+        expect(form).to be_valid
+        expect(described_class.enabled_customization_names_from(form)).to eq(%w(community ngos))
+      end
+    end
+
     it "allows disabling a customization even when its authorizations remain enabled" do
       with_customizations do
         register_test_customization(:community) do |customization|

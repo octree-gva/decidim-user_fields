@@ -31,14 +31,15 @@ describe Decidim::CustomUserFields::Dev::SecretsPatcher do
     path
   end
 
-  it "nests openid_connect under default and development omniauth" do
+  it "nests openid_connect under development.omniauth only" do
     path = write_secrets(fixture)
 
     expect(described_class.call(secrets_path: path)).to eq(:patched)
 
     content = path.read
-    expect(content).to match(/^default: &default\n(?:.*\n)*?^  omniauth:\n(?:.*\n)*?^    openid_connect:/m)
     expect(content).to match(/^development:\n(?:.*\n)*?^  omniauth:\n(?:.*\n)*?^    openid_connect:/m)
+    default_section = content[/^default: &default\n.*?(?=^development:)/m]
+    expect(default_section).not_to include("openid_connect")
     expect(content).not_to match(/^openid_connect:/)
     expect(described_class.call(secrets_path: path)).to eq(:skipped)
   end

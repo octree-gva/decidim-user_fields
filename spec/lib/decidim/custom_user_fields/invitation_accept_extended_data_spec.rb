@@ -12,10 +12,6 @@ describe Decidim::CustomUserFields::InvitationAcceptExtendedData do
       def resource_class
         Decidim::User
       end
-
-      def accept_resource
-        super
-      end
     end
   end
 

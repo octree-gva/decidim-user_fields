@@ -22,7 +22,8 @@ module Decidim
                      :i18n_context=,
                      :validate,
                      :skip_hashing?,
-                     :sanitized_value
+                     :sanitized_value,
+                     :storage_name
 
       def initialize(name, kwargs, handler_name)
         @handler_name = handler_name
@@ -47,7 +48,8 @@ module Decidim
       end
 
       def deep_dup
-        self.class.new(name, { type: type }.merge(field.options), handler_name)
+        opts = field.options.except(:type, "type").merge(type:)
+        self.class.new(name, opts, handler_name)
       end
     end
   end

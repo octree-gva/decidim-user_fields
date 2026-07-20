@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe "Custom user fields invitation acceptance", :custom_user_fields_scenarios, type: :system do
+describe "Custom user fields invitation acceptance", :custom_user_fields_scenarios do
   let!(:organization) { create(:organization) }
   let!(:private_assembly) { create(:assembly, :published, organization:, private_space: true) }
   let!(:inviter) { create(:user, :admin, :confirmed, organization:) }

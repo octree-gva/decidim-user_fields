@@ -31,6 +31,9 @@ module Decidim
 
         def enabled?
           return false unless defined?(OmniAuth::Strategies::OpenIDConnect)
+          # Compose sets ZITADEL_OIDC_ENABLED=1 for local OIDC; never load that
+          # middleware in the test suite (setup decrypts org omniauth settings).
+          return false if Rails.env.test?
 
           ActiveModel::Type::Boolean.new.cast(
             ENV.fetch("ZITADEL_OIDC_ENABLED", Rails.env.development?)
@@ -54,7 +57,7 @@ module Decidim
           lambda do |env|
             request = Rack::Request.new(env)
             organization = Decidim::Organization.find_by(host: request.host)
-            provider_config = organization&.enabled_omniauth_providers&.fetch(:openid_connect, {}) || {}
+            provider_config = Decidim::CustomUserFields::Dev::OpenidConnectSetup.openid_connect_provider_config(organization)
 
             CONFIG_MAPPING.each do |option_key, config_key|
               value = provider_config[config_key]
@@ -71,6 +74,14 @@ module Decidim
 
             env["omniauth.strategy"]
           end
+        end
+
+        def openid_connect_provider_config(organization)
+          return {} if organization.blank?
+
+          organization.enabled_omniauth_providers.fetch(:openid_connect, {})
+        rescue ActiveSupport::MessageEncryptor::InvalidMessage
+          {}
         end
 
         # Zitadel resolves the instance from the HTTP Host header (ExternalDomain=localhost).

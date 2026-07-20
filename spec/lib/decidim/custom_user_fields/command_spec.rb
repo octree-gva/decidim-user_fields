@@ -36,7 +36,7 @@ describe Decidim::CustomUserFields::Command do
 
         data = cmd.send(:extended_data)
 
-        expect(data).to include("existing" => 1, default_foo: "bar")
+        expect(data).to include("existing" => 1, :default_foo => "bar")
         expect(data).not_to have_key(:other_bar)
       end
     end

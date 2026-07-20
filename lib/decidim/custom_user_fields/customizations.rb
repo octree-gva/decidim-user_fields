@@ -7,7 +7,7 @@ module Decidim
   module CustomUserFields
     module Customizations
       class << self
-        def register(name, &block)
+        def register(name, &)
           customization = Customization.new(name)
           registry[name.to_sym] = customization
           builder = Builder.new(customization)
@@ -26,9 +26,7 @@ module Decidim
           registry.values
         end
 
-        def any?
-          registry.any?
-        end
+        delegate :any?, to: :registry
 
         def clear!
           registry.clear

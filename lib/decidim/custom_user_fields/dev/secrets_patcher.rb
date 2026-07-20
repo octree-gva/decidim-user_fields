@@ -5,7 +5,9 @@ require "pathname"
 module Decidim
   module CustomUserFields
     module Dev
-      # Idempotently adds openid_connect to the dummy app secrets.yml.
+      # Idempotently adds openid_connect under development.omniauth only.
+      # Do not patch the YAML default anchor — test/production inherit it and CI
+      # must keep Decidim's stock test omniauth providers.
       class SecretsPatcher
         SNIPPET = <<~YAML
           openid_connect:
@@ -32,18 +34,6 @@ module Decidim
           content = secrets_path.read
           patched = strip_root_openid_connect(content)
           status = patched == content ? :skipped : :patched
-
-          unless default_omniauth_has_openid_connect?(patched)
-            unless patched.match?(/\n\s*google_oauth2:\n/)
-              raise "Could not locate omniauth section in #{secrets_path}"
-            end
-
-            patched = patched.sub(
-              /(\n\s*google_oauth2:.*?\n\s*client_secret:.*?\n)/m,
-              "\\1#{indent_snippet}\n"
-            )
-            status = :patched
-          end
 
           unless development_omniauth_has_openid_connect?(patched)
             unless patched.match?(/^(development:\n(?:.*\n)*?  omniauth:\n(?:.*\n)*?    developer:.*?\n\s+icon:.*?\n)/m)
@@ -72,10 +62,6 @@ module Decidim
 
         def strip_root_openid_connect(content)
           content.gsub(/^openid_connect:\n(?:  .*\n)*/, "")
-        end
-
-        def default_omniauth_has_openid_connect?(content)
-          content.match?(/^default: &default\n(?:.*\n)*?^  omniauth:\n(?:.*\n)*?^    openid_connect:/m)
         end
 
         def development_omniauth_has_openid_connect?(content)

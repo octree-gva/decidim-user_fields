@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe "External authorizations with customizations", :custom_user_fields_scenarios, type: :system do
+describe "External authorizations with customizations", :custom_user_fields_scenarios do
   let(:organization) do
     create(:organization, available_authorizations: %w(dummy_authorization_handler sixteen_plus))
   end

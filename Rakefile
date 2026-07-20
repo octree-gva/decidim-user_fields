@@ -70,7 +70,7 @@ task :test_app do
       "--force_ssl",
       "false",
       "--locales",
-      "en,fr,es"
+      "en,ca,es,fr"
     )
   end
   install_module("spec/decidim_dummy_app")

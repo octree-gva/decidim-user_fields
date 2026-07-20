@@ -87,7 +87,7 @@ module Decidim
           user = Decidim::System::Admin.find_or_initialize_by(email: "system@example.org")
           user.assign_attributes(
             password: "decidim123456789",
-            password_confirmation: "decidim123456789",
+            password_confirmation: "decidim123456789"
           )
           user.save!
           user

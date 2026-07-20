@@ -7,9 +7,6 @@ module Decidim
         include ActionView::Helpers::SanitizeHelper
         include ActiveModel::Validations::Callbacks
 
-        include ActionView::Helpers::SanitizeHelper
-        include ActiveModel::Validations::Callbacks
-
         before_validation :sanitize_values
         validate :custom_field_validation
 
@@ -22,18 +19,20 @@ module Decidim
         end
 
         def custom_field_validation
-          fields.map do |f|
-            value = f.sanitized_value(attributes[f.name])
-            f.validate(value, attributes, errors)
+          data = field_data
+          fields.each do |f|
+            value = f.sanitized_value(data[f.name])
+            f.validate(value, data, errors)
           end
         end
 
         def metadata
           save_extended_data!
+          data = field_data
           super.merge(
             fields.to_h do |field|
               key = field.name
-              plain_val = field.sanitized_value(attributes[key])
+              plain_val = field.sanitized_value(data[key])
 
               value = field.skip_hashing? ? plain_val : Digest::SHA256.hexdigest(plain_val)
               [key, value]
@@ -47,10 +46,21 @@ module Decidim
 
         private
 
+        # Avoid Decidim::Attributes::Model re-instantiating `user` (STI dual-class crash).
+        def field_data
+          fields.to_h { |f| [f.name, self[f.name]] }.with_indifferent_access
+        end
+
+        def form_user
+          @attributes["user"].value_before_type_cast
+        end
+
         def sanitize_values
-          fields.map do |field|
+          fields.each do |field|
             key = field.name
-            self[key] = field.sanitized_value(attributes[key]) if attribute_names.include?(key.to_s)
+            next unless attribute_names.include?(key.to_s)
+
+            self[key] = field.sanitized_value(self[key])
           end
         end
 
@@ -63,10 +73,10 @@ module Decidim
         end
 
         def save_extended_data!
-          user = attributes["user"]
+          user = form_user
           extended_data = user.extended_data.with_indifferent_access
           extra_fields.reject { |field| field.options[:skip_update_on_verified] }.each do |field|
-            extended_data[field.name] = field.sanitized_value(attributes[field.name])
+            extended_data[field.storage_name] = field.sanitized_value(self[field.name])
           end
           user.update!(extended_data:)
         end

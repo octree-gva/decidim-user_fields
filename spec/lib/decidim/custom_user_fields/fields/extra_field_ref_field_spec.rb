@@ -37,7 +37,7 @@ describe Decidim::CustomUserFields::Fields::ExtraFieldRefField do
       end
     end
 
-    it "builds a reference definition and configures it" do
+    it "builds a peer field under the authorization attribute name" do
       with_customizations do
         register_test_customization(:community) do |customization|
           customization.registration_fields { |set| set.add_field(:ref_me, type: :dummy) }
@@ -47,6 +47,7 @@ describe Decidim::CustomUserFields::Fields::ExtraFieldRefField do
 
         expect(field.reference).to be_a(Decidim::CustomUserFields::FieldDefinition)
         expect(field.reference.name).to eq(:community_ref_me)
+        expect(field.send(:peer_field).name).to eq(:ref_me)
       end
     end
   end
@@ -140,11 +141,12 @@ describe Decidim::CustomUserFields::Fields::ExtraFieldRefField do
         end
         field.customization_name = :community
         field.configure_form(form_class)
-        old_context = field.reference.i18n_context
+        peer = field.send(:peer_field)
+        old_context = peer.i18n_context
 
         field.form_tag(builder)
 
-        expect(field.reference.i18n_context).to eq(old_context)
+        expect(peer.i18n_context).to eq(old_context)
       end
     end
   end

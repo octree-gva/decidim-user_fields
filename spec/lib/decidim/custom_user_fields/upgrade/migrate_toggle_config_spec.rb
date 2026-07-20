@@ -5,8 +5,19 @@ require "spec_helper"
 describe Decidim::CustomUserFields::Upgrade::MigrateToggleConfig do
   let(:organization) { create(:organization) }
 
+  before do
+    Decidim::Toggle::OrganizationModuleConfig.delete_all
+  end
+
   def save_toggle_config!(config)
     Decidim::Toggle.save_config!(organization, :custom_user_fields, config, merge: false)
+  end
+
+  def config_for_org
+    Decidim::Toggle::OrganizationModuleConfig.find_by!(
+      decidim_organization_id: organization.id,
+      module_name: "custom_user_fields"
+    )
   end
 
   describe ".run" do
@@ -16,10 +27,7 @@ describe Decidim::CustomUserFields::Upgrade::MigrateToggleConfig do
       result = described_class.run
 
       expect(result).to eq(migrated: 1, skipped: 0)
-      record = Decidim::Toggle::OrganizationModuleConfig.find_by!(
-        decidim_organization_id: organization.id,
-        module_name: "custom_user_fields"
-      )
+      record = config_for_org
       expect(record.config["default_enabled"]).to be(true)
       expect(record.config["other"]).to eq("keep")
       expect(record.config).not_to have_key("active_field_set")
@@ -45,10 +53,7 @@ describe Decidim::CustomUserFields::Upgrade::MigrateToggleConfig do
 
       described_class.run(dry_run: true)
 
-      record = Decidim::Toggle::OrganizationModuleConfig.find_by!(
-        decidim_organization_id: organization.id,
-        module_name: "custom_user_fields"
-      )
+      record = config_for_org
       expect(record.config["active_field_set"]).to eq("community")
       expect(record.config["community_enabled"]).to be_nil
     end

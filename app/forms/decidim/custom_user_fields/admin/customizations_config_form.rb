@@ -14,7 +14,7 @@ module Decidim
         class << self
           def register_toggle_attribute!(customization_name)
             attr = :"#{customization_name}_enabled"
-            return if attribute_types.key?(attr.to_s)
+            return if attribute_types.has_key?(attr.to_s)
 
             attribute attr, :boolean
           end

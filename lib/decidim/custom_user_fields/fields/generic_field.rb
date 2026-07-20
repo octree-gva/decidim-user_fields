@@ -4,10 +4,9 @@ module Decidim
   module CustomUserFields
     module Fields
       class GenericField
-        extend Forwardable
         include ActionView::Helpers::TagHelper
 
-        def_delegators :@definition, :name, :type, :handler_name
+        delegate :name, :type, :handler_name, to: :definition
 
         attr_reader :definition
         attr_accessor :options
@@ -25,6 +24,11 @@ module Decidim
 
         def skip_hashing?
           options[:skip_hashing].present?
+        end
+
+        # Key used in user.extended_data (overridden by ExtraFieldRefField).
+        def storage_name
+          name
         end
 
         def ui_options
@@ -90,7 +94,7 @@ module Decidim
 
         def apply_form_validations(form, validations)
           validations = validations.dup
-          if validations.key?(:presence)
+          if validations.has_key?(:presence)
             validations.delete(:presence) if validations[:presence] == false
           elsif required?
             validations[:presence] = true

@@ -15,21 +15,28 @@ module Decidim
               end
             }
           }
-          validations[:presence] = {
-            message: proc do |_object, _data|
-              label(:required)
-            end
-          } if required?
+          if required?
+            validations[:presence] = {
+              message: proc do |_object, _data|
+                label(:required)
+              end
+            }
+          end
           apply_form_validations(form, validations)
         end
 
         def validate(value, _data, errors)
           return if value.blank? && !required?
 
+          if value.blank?
+            errors.add(name, label(:required))
+            return
+          end
+
           date_value = nil
           begin
             date_value = Date.strptime(value, "%Y-%m-%d")
-          rescue ::Date::Error
+          rescue TypeError, ::Date::Error
             errors.add(name, label(:bad_date))
             return
           end

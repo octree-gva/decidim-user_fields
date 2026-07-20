@@ -36,7 +36,7 @@ module Decidim
         def validate(value, _data, errors)
           if required? && value.blank?
             errors.add(name, label(:required))
-          elsif options[:values_in] && value.present? && !options[:values_in].include?(value)
+          elsif options[:values_in] && value.present? && options[:values_in].exclude?(value)
             errors.add(name, label(:bad_values))
           elsif options[:format] && value.present? && value !~ options[:format]
             errors.add(name, label(:bad_format))

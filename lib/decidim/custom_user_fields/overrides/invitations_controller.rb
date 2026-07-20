@@ -83,7 +83,7 @@ module Decidim
         Decidim::RegistrationForm.from_model(resource).with_context(
           current_organization: invitation_organization,
           current_user: try(:current_user),
-          invitation_token: invitation_token
+          invitation_token:
         )
       end
 

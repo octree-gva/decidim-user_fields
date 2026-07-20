@@ -14,14 +14,14 @@ gem "decidim", DECIDIM_VERSION
 gem "decidim-user_fields", path: base_path
 
 gem "decidim-toggle",
-  git: "https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-toggle",
-  branch: "main"
+    git: "https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-toggle",
+    branch: "main"
 
 gem "bootsnap", "~> 1.18"
+gem "deface", ">= 1.9"
+gem "omniauth_openid_connect", "~> 0.8.0"
 gem "puma", ">= 6.6"
 gem "uglifier", "~> 4.2"
-gem "omniauth_openid_connect", "~> 0.8.0"
-gem "deface", ">= 1.9"
 
 group :development, :test do
   gem "byebug", "~> 11.1", platform: :mri

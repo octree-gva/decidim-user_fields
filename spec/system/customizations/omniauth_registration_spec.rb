@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe "Custom user fields after OIDC registration", :custom_user_fields_scenarios, type: :system do
+describe "Custom user fields after OIDC registration", :custom_user_fields_scenarios do
   let!(:organization) { create(:organization) }
 
   let(:omniauth_hash) do

@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe "Custom authorization on proposals", :custom_user_fields_scenarios, type: :system do
+describe "Custom authorization on proposals", :custom_user_fields_scenarios do
   let(:organization) { create(:organization, available_authorizations: %w(sixteen_plus eighteen_plus twelve_plus)) }
   let(:user) { create(:user, :confirmed, organization:) }
   let(:participatory_process) { create(:participatory_process, :with_steps, organization:) }
@@ -38,7 +38,7 @@ describe "Custom authorization on proposals", :custom_user_fields_scenarios, typ
     visit main_component_path(component)
     click_on "New proposal"
 
-    expect(page).to have_css("h1", text: "Create your proposal")
+    expect(page).to have_css("h1", text: "Create new proposal")
   end
 
   it "rejects authorization when the user is too young" do

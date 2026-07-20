@@ -28,7 +28,7 @@ module Decidim
 
         {
           provider: oauth_data[:provider],
-          uid: uid,
+          uid:,
           name: info[:name],
           nickname: info[:nickname],
           oauth_signature: OmniauthRegistrationForm.create_signature(oauth_data[:provider], uid),
@@ -40,9 +40,9 @@ module Decidim
       def oauth_verified_email
         info = oauth_info_with_indifferent_access
         email = info[:email].presence || raw_omniauth_info[:email].presence
-        return unless email.present?
+        return if email.blank?
         return email if openid_connect_provider?
-        return email unless info.key?(:email_verified)
+        return email unless info.has_key?(:email_verified)
 
         ActiveModel::Type::Boolean.new.cast(info[:email_verified]) ? email : nil
       end

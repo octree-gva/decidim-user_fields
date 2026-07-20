@@ -46,7 +46,7 @@ module Decidim
         def migrate_record!(record)
           config = (record.config || {}).with_indifferent_access
           legacy_name = config[LEGACY_KEY]
-          unless legacy_name.present?
+          if legacy_name.blank?
             @skipped += 1
             return
           end
@@ -73,10 +73,10 @@ module Decidim
         end
 
         def log(record, legacy_name, enabled_key)
-          puts(
+          Rails.logger.debug do
             "[dry-run] org #{record.decidim_organization_id}: " \
-            "#{LEGACY_KEY}=#{legacy_name} → #{enabled_key}=true"
-          )
+              "#{LEGACY_KEY}=#{legacy_name} → #{enabled_key}=true"
+          end
         end
       end
     end

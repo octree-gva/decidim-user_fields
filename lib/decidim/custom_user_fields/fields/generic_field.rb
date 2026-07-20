@@ -72,17 +72,17 @@ module Decidim
         end
 
         def label_exists?(label)
-          I18n.exists?(i18n_handler_label(label))
+          ::I18n.exists?(i18n_handler_label(label))
         end
 
         def label(label)
           i18n_identifier = i18n_handler_label(label)
-          unless I18n.exists?(i18n_identifier)
+          unless ::I18n.exists?(i18n_identifier)
             Rails.logger.error("Missing #{i18n_handler_label(label)}")
             return i18n_identifier
           end
 
-          I18n.t(
+          ::I18n.t(
             i18n_identifier,
             default: i18n_identifier
           )

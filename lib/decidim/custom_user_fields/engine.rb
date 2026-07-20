@@ -42,10 +42,11 @@ module Decidim
           next unless Customizations.any?
 
           tabs.add_tab :custom_user_fields,
-                       I18n.t("decidim.custom_user_fields.system.customizations_tab"),
+                       ::I18n.t("decidim.custom_user_fields.system.customizations_tab"),
                        form: Admin::CustomizationsConfigForm,
                        command: Decidim::Toggle::UpdateModuleConfigCommand,
-                       module_name: :custom_user_fields
+                       module_name: :custom_user_fields,
+                       form_layout_partial: "decidim/custom_user_fields/system/customizations_tab"
         end
       end
     end

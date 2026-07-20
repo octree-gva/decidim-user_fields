@@ -96,7 +96,7 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
 
   it "persists first_login_mode from the user fields tab" do
     within_customizations_tab do
-      choose "None"
+      select "None", from: "First login mode"
       click_on "Save"
     end
 

@@ -73,12 +73,13 @@ task :test_app do
       "en,ca,es,fr"
     )
   end
-  install_module("spec/decidim_dummy_app")
+  # Install under with_unbundled_env before install_module (needs `bundle exec rails`).
   Dir.chdir(File.expand_path("spec/decidim_dummy_app", __dir__)) do
     Bundler.with_unbundled_env do
       sh "bundle install -j $(nproc) --retry 3"
     end
   end
+  install_module("spec/decidim_dummy_app")
   Rake::Task["prepare_tests"].invoke
 end
 

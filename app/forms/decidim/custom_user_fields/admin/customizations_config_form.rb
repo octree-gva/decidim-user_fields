@@ -33,7 +33,7 @@ module Decidim
 
           def collection_for_first_login_mode
             RegistrationFields::FIRST_LOGIN_MODES.map do |value|
-              [value, I18n.t(value, scope: "decidim.custom_user_fields.system.first_login_mode")]
+              [value, ::I18n.t(value, scope: "decidim.custom_user_fields.system.first_login_mode")]
             end
           end
         end

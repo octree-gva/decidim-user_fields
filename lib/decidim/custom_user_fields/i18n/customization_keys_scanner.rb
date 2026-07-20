@@ -23,7 +23,7 @@ module Decidim
 
           CustomizationKeys.required_keys.map do |key|
             ::I18n::Tasks::Scanners::Results::KeyOccurrences.new(
-              key: key,
+              key:,
               occurrences: [synthetic_occurrence(key)]
             )
           end
@@ -54,9 +54,7 @@ module Decidim
           end
 
           require environment
-          if defined?(Decidim::CustomUserFields::ScenarioCustomizations)
-            Decidim::CustomUserFields::ScenarioCustomizations.register!
-          end
+          Decidim::CustomUserFields::ScenarioCustomizations.register! if defined?(Decidim::CustomUserFields::ScenarioCustomizations)
           @registry_ready = defined?(Decidim::CustomUserFields::Customizations)
         rescue LoadError, StandardError => e
           warn(

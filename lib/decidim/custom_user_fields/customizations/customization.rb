@@ -13,7 +13,7 @@ module Decidim
         end
 
         def label
-          I18n.t(
+          ::I18n.t(
             @name,
             scope: "decidim.custom_user_fields.customizations",
             default: @name.to_s.humanize

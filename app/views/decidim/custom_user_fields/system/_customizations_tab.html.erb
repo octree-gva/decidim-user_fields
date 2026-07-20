@@ -1,0 +1,15 @@
+<% organization = local_assigns[:organization] %>
+<% tab = local_assigns[:tab] %>
+<%= decidim_toggle_settings_tab_form(organization, tab) do |tf| %>
+  <% form_class = tf.object.class %>
+  <div class="field">
+    <%= tf.collection_select(
+          :first_login_mode,
+          form_class.collection_for_first_login_mode,
+          :first,
+          :last
+        ) %>
+    <p class="field-helptext"><%= t("decidim_toggle.system.custom_user_fields.helptext.first_login_mode") %></p>
+  </div>
+  <%= tf.fields_for_names(*(form_class.attribute_types.keys.map(&:to_sym) - %i(id first_login_mode))) %>
+<% end %>

@@ -23,6 +23,8 @@ module Decidim
 
       initializer "decidim_custom_user_fields.dev_openid_connect",
                   after: :load_config_initializers do
+        next unless defined?(Decidim::CustomUserFields::Dev::OpenidConnectSetup)
+
         Decidim::CustomUserFields::Dev::OpenidConnectSetup.register_middleware!
       end
 

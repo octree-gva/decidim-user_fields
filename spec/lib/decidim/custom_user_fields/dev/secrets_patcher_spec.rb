@@ -2,6 +2,7 @@
 
 require "spec_helper"
 require "tmpdir"
+require "decidim/custom_user_fields/dev/secrets_patcher"
 
 describe Decidim::CustomUserFields::Dev::SecretsPatcher do
   let(:fixture) do

@@ -1,0 +1,51 @@
+# Local GitLab CI parity for ruby::rspec (ruby:3.2.7 + postgres:15 + redis).
+# Not for interactive OIDC/dev — use docker-compose.yml + ./bin/dev-oidc-up.
+#
+#   docker compose -f docker-compose.ci.yml run --rm rspec
+#   docker compose -f docker-compose.ci.yml down -v
+
+name: user-fields-ci
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: decidim_test
+      POSTGRES_USER: decidim
+      POSTGRES_PASSWORD: "TEST-insecure_password"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U decidim -d decidim_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  redis:
+    image: redis:latest
+
+  rspec:
+    image: ruby:3.2.7
+    working_dir: /app
+    volumes:
+      - .:/app
+    shm_size: "2gb"
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: "5432"
+      DATABASE_PASSWORD: "TEST-insecure_password"
+      DATABASE_USERNAME: decidim
+      DISABLED_DOCKER_COMPOSE: "true"
+      DECIDIM_AVAILABLE_LOCALES: "en,ca,es,fr"
+      NODE_MAJOR: "18"
+      SIMPLECOV: "1"
+      CI: "1"
+      DISABLE_SPRING: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    entrypoint: []
+    command:
+      - /bin/bash
+      - -c
+      - bin/ci-setup && RAILS_ENV=test bundle exec rspec

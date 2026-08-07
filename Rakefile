@@ -50,8 +50,10 @@ task :prepare_tests do
     # so `bundle exec` in the dummy app resolves that Gemfile. Use `with_unbundled_env`, not only
     # `with_original_env` (Bundler docs: subcommands in another directory).
     Bundler.with_unbundled_env do
+      # Fresh DB every run: regenerating the dummy app rewrites migration timestamps, so an
+      # existing schema (local compose volume / re-run) would hit PG::DuplicateTable.
       # Use Rake `sh` so a failed migrate aborts; `env` sets vars in the shell (reliable vs Kernel#system env quirks).
-      sh "env RAILS_ENV=test DISABLE_SPRING=1 bundle exec rails db:migrate"
+      sh "env RAILS_ENV=test DISABLE_SPRING=1 DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bundle exec rails db:drop db:create db:migrate"
     end
   end
 end

@@ -1,6 +1,45 @@
 # frozen_string_literal: true
 
+require "fileutils"
 require "decidim/dev/common_rake"
+
+# Dummy generation boots Rails (`app:template`) before this task can patch files.
+def dummy_shakapacker_yml_source
+  core = Gem.loaded_specs["decidim-core"]&.full_gem_path
+  from_core = core && File.join(core, "lib/decidim/webpacker/shakapacker.yml")
+  return from_core if from_core && File.exist?(from_core)
+
+  File.join(Gem.loaded_specs.fetch("shakapacker").full_gem_path, "lib/install/config/shakapacker.yml")
+end
+
+def copy_dummy_shakapacker_yml!(dummy_root)
+  dest = File.join(dummy_root, "config/shakapacker.yml")
+  return if File.exist?(dest) && !File.zero?(dest)
+  return unless File.directory?(File.join(dummy_root, "config"))
+
+  FileUtils.cp(dummy_shakapacker_yml_source, dest)
+end
+
+def poll_dummy_shakapacker_yml(dummy_root, stop)
+  thread = Thread.new do
+    until stop.call
+      copy_dummy_shakapacker_yml!(dummy_root)
+      sleep 0.1
+    end
+  end
+  thread.abort_on_exception = true
+  thread
+end
+
+def with_dummy_shakapacker_yml(dummy_root)
+  stop = false
+  thread = poll_dummy_shakapacker_yml(dummy_root, -> { stop })
+  yield
+ensure
+  stop = true
+  thread&.join
+  copy_dummy_shakapacker_yml!(dummy_root)
+end
 
 def install_module(path)
   Dir.chdir(path) do
@@ -60,20 +99,23 @@ end
 
 desc "Generates a dummy app for testing"
 task :test_app do
-  Bundler.with_original_env do
-    generate_decidim_app(
-      "spec/decidim_dummy_app",
-      "--app_name",
-      "decidim_test",
-      "--path",
-      "../..",
-      "--skip_spring",
-      "--demo",
-      "--force_ssl",
-      "false",
-      "--locales",
-      "en,ca,es,fr"
-    )
+  dummy_root = File.expand_path("spec/decidim_dummy_app", __dir__)
+  with_dummy_shakapacker_yml(dummy_root) do
+    Bundler.with_original_env do
+      generate_decidim_app(
+        "spec/decidim_dummy_app",
+        "--app_name",
+        "decidim_test",
+        "--path",
+        "../..",
+        "--skip_spring",
+        "--demo",
+        "--force_ssl",
+        "false",
+        "--locales",
+        "en,ca,es,fr"
+      )
+    end
   end
   # Install under with_unbundled_env before install_module (needs `bundle exec rails`).
   Dir.chdir(File.expand_path("spec/decidim_dummy_app", __dir__)) do

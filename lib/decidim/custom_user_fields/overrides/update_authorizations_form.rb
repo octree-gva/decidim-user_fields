@@ -11,25 +11,18 @@ module Decidim
         end
 
         def collection_for_available_authorizations
-          pairs_for(selectable_workflows)
+          pairs = defined?(super) ? super : self.class.collection_for_available_authorizations
+          filter_authorization_pairs(pairs)
         end
 
         def collection_for_ephemeral_participation_authorization
-          return [] unless self.class.ephemeral_mode?
-
-          pairs_for(ephemerable_workflows)
+          pairs = defined?(super) ? super : self.class.collection_for_ephemeral_participation_authorization
+          filter_authorization_pairs(pairs)
         end
 
-        def selectable_workflows
-          Verifications.selectable_workflows(current_organization)
-        end
-
-        def ephemerable_workflows
-          selectable_workflows.select { |workflow| workflow.respond_to?(:ephemerable) && workflow.ephemerable }
-        end
-
-        def pairs_for(workflows)
-          workflows.map { |workflow| [workflow.name, workflow.description] }
+        def filter_authorization_pairs(pairs)
+          allowed = Verifications.selectable_workflows(current_organization).to_set { |workflow| workflow.name.to_s }
+          Array(pairs).select { |name, _label| allowed.include?(name.to_s) }
         end
       end
     end

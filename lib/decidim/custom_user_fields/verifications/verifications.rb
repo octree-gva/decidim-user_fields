@@ -55,7 +55,7 @@ module Decidim
 
         def prune_raw_authorizations(raw, disabled)
           case raw
-          when Hash then raw.reject { |name, _| disabled.include?(name.to_s) }
+          when Hash then raw.reject { |name, _options| disabled.include?(name.to_s) }
           else Array(raw).map(&:to_s) - disabled
           end
         end

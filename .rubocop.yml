@@ -1,5 +1,14 @@
+inherit_mode:
+  merge:
+    - Exclude
+
 inherit_gem:
   decidim-dev: rubocop-decidim.yml
+
+AllCops:
+  Exclude:
+    - "Appraisals"
+    - "gemfiles/**/*"
 
 RSpec/DescribeClass:
   Exclude:

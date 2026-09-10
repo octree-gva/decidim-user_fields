@@ -27,6 +27,53 @@ describe Decidim::CustomUserFields::Verifications do
     end
   end
 
+  describe ".selectable_workflows" do
+    it "omits customization handlers until that customization is enabled" do
+      with_customizations do
+        register_test_customization(:community) do |customization|
+          customization.authorization("NgoVerify") { |config| config.add_field(:foo, type: :text) }
+        end
+        organization = create(:organization)
+
+        expect(described_class.selectable_workflows(organization).map(&:name)).not_to include("ngo_verify")
+
+        enable_customization_for(organization, :community)
+        expect(described_class.selectable_workflows(organization).map(&:name)).to include("ngo_verify")
+      end
+    end
+  end
+
+  describe ".prune_disabled_handlers" do
+    it "drops handlers whose customization is disabled and keeps others" do
+      with_customizations do
+        register_test_customization(:community) do |customization|
+          customization.authorization("NgoVerify") { |config| config.add_field(:foo, type: :text) }
+        end
+        organization = create(:organization)
+        raw = %w(ngo_verify dummy_authorization_handler)
+
+        expect(described_class.prune_disabled_handlers(raw, organization)).to eq(%w(dummy_authorization_handler))
+      end
+    end
+
+    it "keeps Hash storage used with decidim-ephemeral_participation" do
+      with_customizations do
+        register_test_customization(:community) do |customization|
+          customization.authorization("NgoVerify") { |config| config.add_field(:foo, type: :text) }
+        end
+        organization = create(:organization)
+        raw = {
+          "ngo_verify" => { "allow_ephemeral_participation" => false },
+          "dummy_authorization_handler" => { "allow_ephemeral_participation" => true }
+        }
+
+        expect(described_class.prune_disabled_handlers(raw, organization)).to eq(
+          "dummy_authorization_handler" => { "allow_ephemeral_participation" => true }
+        )
+      end
+    end
+  end
+
   describe ".register" do
     it "registers a decidim workflow with a custom handler form" do
       workflow = Class.new do

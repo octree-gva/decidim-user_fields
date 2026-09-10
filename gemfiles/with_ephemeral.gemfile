@@ -1,21 +1,25 @@
 # frozen_string_literal: true
 
+# Hand-maintained appraisal gemfile. Keep in sync with Appraisals (with_ephemeral)
+# and the root Gemfile.
+
 source "https://rubygems.org"
 
-base_path = "./"
-base_path = "../../" if File.basename(__dir__) == "decidim_dummy_app"
-base_path = "../" if File.basename(__dir__) == "development_app"
-
-require_relative "#{base_path}lib/decidim/custom_user_fields/version"
+engine_root = File.expand_path("..", __dir__)
+require_relative File.join(engine_root, "lib/decidim/custom_user_fields/version")
 
 DECIDIM_VERSION = "~> 0.29.7"
 
 gem "decidim", DECIDIM_VERSION
-gem "decidim-user_fields", path: base_path
+gem "decidim-user_fields", path: engine_root
 
 gem "decidim-toggle",
     git: "https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-toggle",
     branch: "main"
+
+gem "decidim-ephemeral_participation",
+    git: "https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-ephemeral_participation",
+    tag: "v0.0.9"
 
 gem "bootsnap", "~> 1.18"
 gem "deface", ">= 1.9"

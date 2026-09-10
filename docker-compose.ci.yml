@@ -2,6 +2,7 @@
 # Not for interactive OIDC/dev — use docker-compose.yml + ./bin/dev-oidc-up.
 #
 #   docker compose -f docker-compose.ci.yml run --rm rspec
+#   docker compose -f docker-compose.ci.yml run --rm -e BUNDLE_GEMFILE=gemfiles/with_ephemeral.gemfile rspec
 #   docker compose -f docker-compose.ci.yml down -v
 
 name: user-fields-ci

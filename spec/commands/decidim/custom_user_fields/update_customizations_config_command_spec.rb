@@ -26,4 +26,31 @@ describe Decidim::CustomUserFields::UpdateCustomizationsConfigCommand do
       expect(organization.reload.available_authorizations).to eq(%w(dummy_authorization_handler))
     end
   end
+
+  it "unselects handlers from Hash-shaped available_authorizations" do
+    skip unless Decidim::Toggle.ephemeral_participation?
+
+    with_customizations do
+      register_test_customization(:community) do |customization|
+        customization.authorization("NgoVerify") { |config| config.add_field(:foo, type: :text) }
+      end
+      enable_customization_for(organization, :community)
+      organization.update!(
+        available_authorizations: {
+          "ngo_verify" => { "allow_ephemeral_participation" => false },
+          "dummy_authorization_handler" => { "allow_ephemeral_participation" => true }
+        }
+      )
+
+      form = Decidim::CustomUserFields::Admin::CustomizationsConfigForm.from_params(
+        organization: { community_enabled: false }
+      ).with_context(current_organization: organization)
+
+      described_class.new(organization, form).call
+
+      raw = organization.reload.read_attribute(:available_authorizations)
+      expect(raw).to be_a(Hash)
+      expect(raw.keys.map(&:to_s)).to eq(%w(dummy_authorization_handler))
+    end
+  end
 end

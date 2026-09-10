@@ -45,7 +45,31 @@ def install_module(path)
   Dir.chdir(path) do
     Bundler.with_unbundled_env do
       sh "bundle exec rails decidim_toggle:install:migrations"
+      next unless File.read("Gemfile").include?("decidim-ephemeral_participation")
+
+      sh "bundle exec rails decidim_ephemeral_participation:install:migrations"
     end
+  end
+end
+
+def ephemeral_gem_in_bundle?
+  Bundler.definition.dependencies.any? { |dep| dep.name == "decidim-ephemeral_participation" }
+end
+
+def inject_ephemeral_into_dummy_gemfile!(dummy_root)
+  return unless ephemeral_gem_in_bundle?
+
+  gemfile = File.join(dummy_root, "Gemfile")
+  contents = File.read(gemfile)
+  return if contents.include?("decidim-ephemeral_participation")
+
+  File.open(gemfile, "a") do |file|
+    file.puts <<~RUBY
+
+      gem "decidim-ephemeral_participation",
+          git: "https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-ephemeral_participation",
+          tag: "v0.0.9"
+    RUBY
   end
 end
 
@@ -117,6 +141,7 @@ task :test_app do
       )
     end
   end
+  inject_ephemeral_into_dummy_gemfile!(dummy_root)
   # Install under with_unbundled_env before install_module (needs `bundle exec rails`).
   Dir.chdir(File.expand_path("spec/decidim_dummy_app", __dir__)) do
     Bundler.with_unbundled_env do

@@ -106,6 +106,32 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
     end
   end
 
+  it "does not render the ephemeral participation picker without the gem" do
+    skip if Decidim::Toggle.ephemeral_participation?
+
+    within_authorizations_tab do
+      expect(page).to have_no_content(I18n.t("decidim_toggle.system.organizations.authorizations_tab.ephemeral_hint"))
+    end
+  end
+
+  it "renders the ephemeral participation picker and keeps Hash storage" do
+    skip unless Decidim::Toggle.ephemeral_participation?
+
+    enable_customization_for(organization, :birthdate_age_gates)
+    visit decidim_system.edit_organization_path(organization)
+
+    within_authorizations_tab do
+      expect(page).to have_content(I18n.t("decidim_toggle.system.organizations.authorizations_tab.ephemeral_hint"))
+      check "organization_available_authorizations_sixteen_plus"
+      click_on "Save"
+    end
+
+    settings_updated_successfully!
+    raw = organization.reload.read_attribute(:available_authorizations)
+    expect(raw).to be_a(Hash)
+    expect(raw.keys.map(&:to_s)).to include("sixteen_plus")
+  end
+
   it "persists first_login_mode from the user fields tab" do
     within_customizations_tab do
       select "None", from: "First login mode"

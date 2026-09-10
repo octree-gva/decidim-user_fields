@@ -142,3 +142,8 @@ ruby::rspec:
     - bundle exec rake test_app
   script:
     - RAILS_ENV=test bundle exec rspec
+
+ruby::rspec-ephemeral:
+  extends: ruby::rspec
+  variables:
+    BUNDLE_GEMFILE: gemfiles/with_ephemeral.gemfile

@@ -5,7 +5,7 @@
 # those RoutingErrors fail the example. Rails middleware is frozen after boot,
 # and appended routes get wiped by reload_routes! — wrap Capybara.app instead.
 class BrowserAssetNoopMiddleware
-  NOOP_PATHS = %w[/favicon.ico /manifest.webmanifest].freeze
+  NOOP_PATHS = %w(/favicon.ico /manifest.webmanifest).freeze
 
   def initialize(app)
     @app = app

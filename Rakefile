@@ -14,7 +14,7 @@ end
 
 def copy_dummy_shakapacker_yml!(dummy_root)
   dest = File.join(dummy_root, "config/shakapacker.yml")
-  return if File.exist?(dest) && !File.zero?(dest)
+  return if File.exist?(dest) && !File.empty?(dest)
   return unless File.directory?(File.join(dummy_root, "config"))
 
   FileUtils.cp(dummy_shakapacker_yml_source, dest)

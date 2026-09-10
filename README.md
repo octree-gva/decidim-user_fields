@@ -357,7 +357,7 @@ docker compose --profile dev run --rm decidim bash -c \
 docker compose -f docker-compose.ci.yml run --rm rspec
 
 # Same specs with decidim-ephemeral_participation (Appraisal `with_ephemeral`)
-docker compose -f docker-compose.ci.yml run --rm -e BUNDLE_GEMFILE=gemfiles/with_ephemeral.gemfile rspec
+docker compose -f docker-compose.ci.yml run --rm -e BUNDLE_GEMFILE=/app/gemfiles/with_ephemeral.gemfile rspec
 ```
 
 Regenerate the dummy app when switching `BUNDLE_GEMFILE` (`rake test_app` in that bundle). Default CI has no ephemeral gem; `ruby::rspec-ephemeral` installs `decidim-ephemeral_participation` `v0.0.9`.

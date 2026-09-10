@@ -56,8 +56,8 @@ def ephemeral_gem_in_bundle?
   Bundler.definition.dependencies.any? { |dep| dep.name == "decidim-ephemeral_participation" }
 end
 
-def inject_ephemeral_into_dummy_gemfile!(dummy_root)
-  return unless ephemeral_gem_in_bundle?
+def inject_ephemeral_into_dummy_gemfile!(dummy_root, enabled: ephemeral_gem_in_bundle?)
+  return unless enabled
 
   gemfile = File.join(dummy_root, "Gemfile")
   contents = File.read(gemfile)
@@ -97,7 +97,9 @@ task :prepare_tests do
     "password" => ENV.fetch("DATABASE_PASSWORD", "TEST-baeGhi4Ohtahcee5eejoaxaiwaezaiGo"),
     "database" => "decidim_test",
     # GitLab/docker Postgres services rarely offer TLS on the internal hostname
-    "sslmode" => ENV.fetch("DATABASE_SSLMODE", "disable")
+    "sslmode" => ENV.fetch("DATABASE_SSLMODE", "disable"),
+    # Ephemeral migration changes available_authorizations array → jsonb then updates rows.
+    "prepared_statements" => false
   }
   # Dummy app is CI-only; Spring / bin/rails often boot `development` even when we intend `test`.
   # Mirror `test` so `db:migrate` never dies on missing `development` (see ActiveRecord::AdapterNotSpecified).
@@ -124,8 +126,10 @@ end
 desc "Generates a dummy app for testing"
 task :test_app do
   dummy_root = File.expand_path("spec/decidim_dummy_app", __dir__)
+  needs_ephemeral = ephemeral_gem_in_bundle?
   with_dummy_shakapacker_yml(dummy_root) do
     Bundler.with_original_env do
+      ENV.delete("BUNDLE_GEMFILE")
       generate_decidim_app(
         "spec/decidim_dummy_app",
         "--app_name",
@@ -141,7 +145,7 @@ task :test_app do
       )
     end
   end
-  inject_ephemeral_into_dummy_gemfile!(dummy_root)
+  inject_ephemeral_into_dummy_gemfile!(dummy_root, enabled: needs_ephemeral)
   # Install under with_unbundled_env before install_module (needs `bundle exec rails`).
   Dir.chdir(File.expand_path("spec/decidim_dummy_app", __dir__)) do
     Bundler.with_unbundled_env do

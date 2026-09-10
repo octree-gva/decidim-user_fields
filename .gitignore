@@ -1,5 +1,6 @@
 .DS_Store
 vendor
+gemfiles/vendor
 node_modules
 .env
 docker/zitadel/oidc.env

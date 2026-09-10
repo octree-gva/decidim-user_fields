@@ -34,6 +34,10 @@ module Decidim
           config = names.index_with { true }.transform_keys { |name| :"#{name}_enabled" }
           Decidim::Toggle.save_config!(organization, :custom_user_fields, config, merge: false)
         end
+
+        def ephemeral_participation_gem?
+          Gem.loaded_specs.has_key?("decidim-ephemeral_participation")
+        end
       end
     end
   end

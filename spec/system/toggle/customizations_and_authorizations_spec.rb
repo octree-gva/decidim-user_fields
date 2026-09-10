@@ -107,21 +107,21 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
   end
 
   it "does not render the ephemeral participation picker without the gem" do
-    skip if Decidim::Toggle.ephemeral_participation?
+    skip "decidim-ephemeral_participation is loaded" if ephemeral_participation_gem?
 
     within_authorizations_tab do
-      expect(page).to have_no_content(I18n.t("decidim_toggle.system.organizations.authorizations_tab.ephemeral_hint"))
+      expect(page).to have_no_css("input[id$='allow_ephemeral_participation']")
     end
   end
 
   it "renders the ephemeral participation picker and keeps Hash storage" do
-    skip unless Decidim::Toggle.ephemeral_participation?
+    skip "requires decidim-ephemeral_participation" unless ephemeral_participation_gem?
 
     enable_customization_for(organization, :birthdate_age_gates)
     visit decidim_system.edit_organization_path(organization)
 
     within_authorizations_tab do
-      expect(page).to have_content(I18n.t("decidim_toggle.system.organizations.authorizations_tab.ephemeral_hint"))
+      expect(page).to have_css("input[id^='organization_available_authorizations_']")
       check "organization_available_authorizations_sixteen_plus"
       click_on "Save"
     end

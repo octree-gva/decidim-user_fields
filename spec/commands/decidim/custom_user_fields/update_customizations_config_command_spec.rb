@@ -28,7 +28,7 @@ describe Decidim::CustomUserFields::UpdateCustomizationsConfigCommand do
   end
 
   it "unselects handlers from Hash-shaped available_authorizations" do
-    skip unless Decidim::Toggle.ephemeral_participation?
+    skip "requires decidim-ephemeral_participation" unless ephemeral_participation_gem?
 
     with_customizations do
       register_test_customization(:community) do |customization|

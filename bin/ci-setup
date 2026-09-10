@@ -20,6 +20,7 @@ apt-get update && apt-get install -y -qq nodejs
 npm install -g yarn --force
 
 gem install bundler
-bundle config set path 'vendor'
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+bundle config set path "$ROOT/vendor"
 RAILS_ENV=development bundle install -j "$(nproc)" --retry 3
 bundle exec rake test_app

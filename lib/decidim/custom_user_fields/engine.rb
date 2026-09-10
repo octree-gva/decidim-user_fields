@@ -46,7 +46,7 @@ module Decidim
           tabs.add_tab :custom_user_fields,
                        ::I18n.t("decidim.custom_user_fields.system.customizations_tab"),
                        form: Admin::CustomizationsConfigForm,
-                       command: Decidim::Toggle::UpdateModuleConfigCommand,
+                       command: UpdateCustomizationsConfigCommand,
                        module_name: :custom_user_fields,
                        form_layout_partial: "decidim/custom_user_fields/system/customizations_tab"
         end

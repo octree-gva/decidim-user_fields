@@ -44,7 +44,7 @@ describe Decidim::CustomUserFields::Admin::CustomizationsConfigForm do
       end
     end
 
-    it "allows disabling a customization even when its authorizations remain enabled" do
+    it "accepts disabling a customization that still has selected authorizations" do
       with_customizations do
         register_test_customization(:community) do |customization|
           customization.authorization("NgoVerify") { |config| config.add_field(:foo, type: :text) }

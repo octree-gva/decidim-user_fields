@@ -23,10 +23,13 @@ require "decidim/custom_user_fields/overrides/omniauth_command"
 require "decidim/custom_user_fields/overrides/omniauth_registrations_controller"
 require "decidim/custom_user_fields/overrides/invitations_controller"
 require "decidim/custom_user_fields/overrides/authorizations_controller"
+require "decidim/custom_user_fields/overrides/update_authorizations_form"
+require "decidim/custom_user_fields/overrides/settings_form_builder"
 require "decidim/custom_user_fields/overrides/form_definition"
 require "decidim/custom_user_fields/decidim_integrations"
 
 require "decidim/custom_user_fields/engine"
+require "decidim/custom_user_fields/update_customizations_config_command"
 
 if defined?(Rails) && (Rails.env.development? || ENV["ZITADEL_OIDC_ENABLED"].present?)
   require "decidim/custom_user_fields/dev/scenario_customizations"

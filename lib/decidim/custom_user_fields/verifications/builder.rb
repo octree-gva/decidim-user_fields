@@ -49,6 +49,7 @@ module Decidim
 
         def register_workflow!
           validate_extra_field_ref_requirements!
+          return if workflow_already_registered?
 
           Decidim::Verifications.register_workflow(handler_name.to_sym) do |workflow|
             workflow.form = "Decidim::CustomUserFields::Verifications::#{klass_name}"
@@ -66,6 +67,10 @@ module Decidim
         end
 
         private
+
+        def workflow_already_registered?
+          Decidim::Verifications.find_workflow_manifest(handler_name).present?
+        end
 
         def validate_extra_field_ref_requirements!
           uses_extra_field_ref = fields.any? { |field| field.type == :extra_field_ref }

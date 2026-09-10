@@ -22,6 +22,9 @@ module Decidim
         prepend_to(Decidim::UpdateAccount, Command)
         prepend_to(Decidim::Devise::InvitationsController, InvitationAcceptExtendedData)
         prepend_to(Decidim::Verifications::AuthorizationsController, AuthorizationsController)
+        prepend_to(Decidim::Toggle::SettingsFormBuilder, Overrides::SettingsFormBuilder)
+        prepend_to(Decidim::Toggle::UpdateAuthorizationsForm, Overrides::UpdateAuthorizationsForm)
+        prepend_to(Decidim::Toggle::UpdateAuthorizationsForm.singleton_class, Overrides::UpdateAuthorizationsForm::ClassMethods)
       end
 
       def include_form(klass)

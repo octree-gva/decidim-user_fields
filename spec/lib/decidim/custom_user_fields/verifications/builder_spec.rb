@@ -11,6 +11,7 @@ describe Decidim::CustomUserFields::Verifications::Builder do
         attr_accessor :form, :metadata_cell, :ephemerable, :renewable, :time_between_renewals
       end.new
 
+      allow(Decidim::Verifications).to receive(:find_workflow_manifest).and_return(nil)
       allow(Decidim::Verifications).to receive(:register_workflow).and_yield(workflow)
       builder.add_field(:foo, type: :text)
 
@@ -18,6 +19,16 @@ describe Decidim::CustomUserFields::Verifications::Builder do
 
       expect(Decidim::Verifications).to have_received(:register_workflow).with(:test_flow)
       expect(workflow.form).to eq("Decidim::CustomUserFields::Verifications::TestFlow")
+    end
+
+    it "does not register the workflow twice" do
+      allow(Decidim::Verifications).to receive(:find_workflow_manifest).and_return(double)
+      allow(Decidim::Verifications).to receive(:register_workflow)
+      builder.add_field(:foo, type: :text)
+
+      builder.register_workflow!
+
+      expect(Decidim::Verifications).not_to have_received(:register_workflow)
     end
   end
 

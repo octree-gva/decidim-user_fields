@@ -47,7 +47,7 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
     expect(organization.reload.available_authorizations).to include("sixteen_plus")
   end
 
-  it "allows disabling a customization even when its authorizations remain enabled" do
+  it "hides and unselects authorizations when their customization is disabled" do
     enable_customization_for(organization, :birthdate_age_gates)
     organization.update!(available_authorizations: %w(sixteen_plus))
 
@@ -58,7 +58,19 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
     end
 
     settings_updated_successfully!
-    expect(organization.reload.available_authorizations).to include("sixteen_plus")
+    expect(organization.reload.available_authorizations).not_to include("sixteen_plus")
+
+    within_authorizations_tab do
+      expect(page).to have_no_content("16 plus")
+    end
+  end
+
+  it "does not list demo customization authorizations until the customization is enabled" do
+    within_authorizations_tab do
+      expect(page).to have_no_content("Location validated")
+      expect(page).to have_no_content("12 plus")
+      expect(page).to have_content("Example authorization")
+    end
   end
 
   it "keeps external authorizations available alongside customization workflows" do

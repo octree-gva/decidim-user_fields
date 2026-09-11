@@ -3,8 +3,11 @@ en:
     system:
       custom_user_fields:
         first_login_mode: "First login mode"
+        enabled_customization: "Customization"
+        none: "None"
         birthdate_age_gates_enabled: "Birthdate age gates"
         location_validation_enabled: "Location validation"
         association_enabled: "Association representative"
         helptext:
           first_login_mode: "Choose whether participants are prompted to verify after their first sign-in. Authorizations remain available when actions require them."
+          enabled_customization: "Enable only one customization at a time to avoid conflicts. Choose none to keep extra fields and bundled authorizations off."

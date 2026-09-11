@@ -30,14 +30,15 @@ module Decidim
         end
 
         def clean_available_authorizations
-          cleaned = defined?(super) ? super : Array(available_authorizations).map(&:to_s).compact_blank
-          return cleaned if cleaned.is_a?(Hash) || !ephemeral_participation_gem?
+          cleaned = super
+          return cleaned if cleaned.is_a?(Array) || cleaned.is_a?(Hash)
+          return wrap_ephemeral_authorizations(Array(cleaned).map(&:to_s)) if persist_authorizations_as_hash?
 
-          wrap_ephemeral_authorizations(Array(cleaned).map(&:to_s))
+          Array(cleaned).map(&:to_s).compact_blank
         end
 
-        def ephemeral_participation_gem?
-          Gem.loaded_specs.has_key?("decidim-ephemeral_participation")
+        def persist_authorizations_as_hash?
+          Gem.loaded_specs.has_key?("decidim-toggle") && Decidim::Toggle.ephemeral_authorizations_hash?
         end
 
         def wrap_ephemeral_authorizations(names)

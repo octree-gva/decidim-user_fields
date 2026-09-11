@@ -60,7 +60,7 @@ parameters:
 
 Labels are translated under `decidim.custom_user_fields` (fields) and `decidim.authorization_handlers` (workflows).
 Registration fields are **prefixed** with the customization name (for example `:community` + `:social_url` → `community_social_url` under `extended_data`).
-Admin toggle checkboxes use `decidim_toggle.system.custom_user_fields.<name>_enabled`.
+Admin toggle radios use `decidim_toggle.system.custom_user_fields.<name>_enabled` (one customization at a time; none uses `decidim_toggle.system.custom_user_fields.none`).
 
 See the [Translate](../dev_documentation/locales.md) page for the full required key list and how to run `i18n-tasks missing`.
 

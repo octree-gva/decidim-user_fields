@@ -32,7 +32,7 @@ For each `register_customization :name`:
 
 | Surface | Key |
 |--------|-----|
-| Admin toggle checkbox | `decidim_toggle.system.custom_user_fields.<name>_enabled` |
+| Admin toggle radio | `decidim_toggle.system.custom_user_fields.<name>_enabled` |
 | Customization label | `decidim.custom_user_fields.customizations.<name>` |
 | Registration field label | `decidim.custom_user_fields.extended_data.<name>_<field>.label` |
 | Authorization field label | `decidim.custom_user_fields.<handler>.<field>.label` |

@@ -26,9 +26,20 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
     within("#panel-toggle-authorizations", &)
   end
 
+  def choose_customization(label)
+    choose(label, name: "organization[enabled_customization]")
+  end
+
+  it "renders customization options as radios" do
+    within_customizations_tab do
+      expect(page).to have_css("input[name='organization[enabled_customization]'][type=radio]")
+      expect(page).to have_no_css("input[name='organization[birthdate_age_gates_enabled]']")
+    end
+  end
+
   it "enables a customization and exposes its authorizations in the authorizations tab" do
     within_customizations_tab do
-      check "organization_birthdate_age_gates_enabled"
+      choose_customization("Birthdate age gates")
       click_on "Save"
     end
 
@@ -53,7 +64,7 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
 
     visit decidim_system.edit_organization_path(organization)
     within_customizations_tab do
-      uncheck "organization_birthdate_age_gates_enabled"
+      choose_customization("None")
       click_on "Save"
     end
 
@@ -79,7 +90,7 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
     end
 
     within_customizations_tab do
-      check "organization_association_enabled"
+      choose_customization("Association representative")
       click_on "Save"
     end
 
@@ -89,19 +100,25 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
     end
   end
 
-  it "enables multiple customizations and exposes all their authorizations" do
+  it "keeps only the selected customization authorizations" do
     within_customizations_tab do
-      check "organization_birthdate_age_gates_enabled"
-      check "organization_association_enabled"
+      choose_customization("Birthdate age gates")
+      click_on "Save"
+    end
+
+    settings_updated_successfully!
+
+    within_customizations_tab do
+      choose_customization("Association representative")
       click_on "Save"
     end
 
     settings_updated_successfully!
 
     within_authorizations_tab do
-      expect(page).to have_content("12 plus")
-      expect(page).to have_content("16 plus")
-      expect(page).to have_content("18 plus")
+      expect(page).to have_no_content("12 plus")
+      expect(page).to have_no_content("16 plus")
+      expect(page).to have_no_content("18 plus")
       expect(page).to have_content("Association only")
     end
   end

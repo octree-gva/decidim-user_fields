@@ -73,12 +73,12 @@ Decidim::CustomUserFields.register_customization :ngos do |customization|
 end
 ```
 
-Admin toggle labels: `decidim_toggle.system.custom_user_fields.<name>_enabled`.
+Admin toggle radio labels: `decidim_toggle.system.custom_user_fields.<name>_enabled`. The none option uses `decidim_toggle.system.custom_user_fields.none`.
 Customization display labels (`Customization#label`): `decidim.custom_user_fields.customizations.<name>`.
 
 Full key list and how to run `i18n-tasks missing` (customization registry scanner): see the [Translate](https://octree-gva.github.io/decidim-user_fields/dev_documentation/locales) docs page.
 
-Sysadmins enable or disable whole customizations per organization. Bundled authorization workflows appear under **System → Authorizations** only while that customization is enabled; disabling it also unselects those handlers.
+Sysadmins enable at most one customization per organization (radio). Bundled authorization workflows appear under **System → Authorizations** only while that customization is enabled; switching or choosing none also unselects those handlers.
 
 ## Upgrading from field sets to customizations
 

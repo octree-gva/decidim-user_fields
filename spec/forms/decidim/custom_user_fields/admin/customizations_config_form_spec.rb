@@ -30,7 +30,25 @@ describe Decidim::CustomUserFields::Admin::CustomizationsConfigForm do
       end
     end
 
-    it "accepts enabling multiple registered customizations" do
+    it "maps the radio to a single enabled customization" do
+      with_customizations do
+        register_test_customization(:community)
+        register_test_customization(:ngos)
+
+        form = described_class.from_params(
+          organization: { enabled_customization: "ngos", community_enabled: true }
+        ).with_context(current_organization: organization)
+
+        expect(form).to be_valid
+        persist = form.to_h.with_indifferent_access
+        expect(persist[:community_enabled]).to be(false)
+        expect(persist[:ngos_enabled]).to be(true)
+        expect(persist).not_to have_key(:enabled_customization)
+        expect(described_class.enabled_customization_names_from(form)).to eq(%w(ngos))
+      end
+    end
+
+    it "keeps a single flag when params still send multiple booleans" do
       with_customizations do
         register_test_customization(:community)
         register_test_customization(:ngos)
@@ -39,8 +57,19 @@ describe Decidim::CustomUserFields::Admin::CustomizationsConfigForm do
           organization: { community_enabled: true, ngos_enabled: true }
         ).with_context(current_organization: organization)
 
-        expect(form).to be_valid
-        expect(described_class.enabled_customization_names_from(form)).to eq(%w(community ngos))
+        form.to_h
+        expect(described_class.enabled_customization_names_from(form)).to eq(%w(community))
+      end
+    end
+
+    it "loads the radio from stored enabled flags" do
+      with_customizations do
+        register_test_customization(:community)
+        enable_customization_for(organization, :community)
+
+        form = described_class.from_model(organization)
+
+        expect(form.enabled_customization).to eq("community")
       end
     end
 
@@ -89,6 +118,16 @@ describe Decidim::CustomUserFields::Admin::CustomizationsConfigForm do
   describe ".collection_for_first_login_mode" do
     it "returns prompt_authorization and none options" do
       expect(described_class.collection_for_first_login_mode.map(&:first)).to eq(%w(prompt_authorization none))
+    end
+  end
+
+  describe ".collection_for_enabled_customization" do
+    it "returns none plus registered customizations" do
+      with_customizations do
+        register_test_customization(:community)
+
+        expect(described_class.collection_for_enabled_customization.map(&:first)).to eq(["", "community"])
+      end
     end
   end
 end

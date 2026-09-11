@@ -32,8 +32,8 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
 
   it "renders customization options as radios" do
     within_customizations_tab do
-      expect(page).to have_css("input[name='organization[enabled_customization]'][type=radio]")
-      expect(page).to have_no_css("input[name='organization[birthdate_age_gates_enabled]']")
+      expect(page).to have_field("organization_enabled_customization_birthdate_age_gates", type: :radio)
+      expect(page).to have_no_field("organization_birthdate_age_gates_enabled")
     end
   end
 

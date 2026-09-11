@@ -24,7 +24,6 @@ require "decidim/custom_user_fields/overrides/omniauth_registrations_controller"
 require "decidim/custom_user_fields/overrides/invitations_controller"
 require "decidim/custom_user_fields/overrides/authorizations_controller"
 require "decidim/custom_user_fields/overrides/update_authorizations_form"
-require "decidim/custom_user_fields/overrides/settings_form_builder"
 require "decidim/custom_user_fields/overrides/form_definition"
 require "decidim/custom_user_fields/decidim_integrations"
 

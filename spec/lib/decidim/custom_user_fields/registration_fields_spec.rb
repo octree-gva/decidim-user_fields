@@ -48,15 +48,6 @@ describe Decidim::CustomUserFields::RegistrationFields do
         expect(described_class.enabled_customization_names(organization)).to eq([])
       end
     end
-
-    it "returns empty when toggle config cannot be read" do
-      with_customizations do
-        register_test_customization(:community)
-        allow(Decidim::Toggle).to receive(:config_for).and_raise(StandardError)
-
-        expect(described_class.enabled_customization_names(organization)).to eq([])
-      end
-    end
   end
 
   describe ".active_registration_fields" do

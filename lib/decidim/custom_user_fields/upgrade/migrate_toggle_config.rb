@@ -21,8 +21,6 @@ module Decidim
         end
 
         def run
-          return summary unless toggle_available?
-
           scope.find_each { |record| migrate_record!(record) }
           summary
         end
@@ -35,10 +33,6 @@ module Decidim
           { migrated:, skipped: }
         end
 
-        def toggle_available?
-          defined?(Decidim::Toggle::OrganizationModuleConfig)
-        end
-
         def scope
           Decidim::Toggle::OrganizationModuleConfig.where(module_name: MODULE_NAME)
         end
@@ -46,22 +40,23 @@ module Decidim
         def migrate_record!(record)
           config = (record.config || {}).with_indifferent_access
           legacy_name = config[LEGACY_KEY]
-          if legacy_name.blank?
-            @skipped += 1
-            return
-          end
+          return increment_skipped if legacy_name.blank?
 
+          persist_migrated!(record, config, legacy_name)
+          @migrated += 1
+        end
+
+        def increment_skipped
+          @skipped += 1
+        end
+
+        def persist_migrated!(record, config, legacy_name)
           enabled_key = "#{legacy_name}_enabled"
           next_config = config.except(LEGACY_KEY)
           next_config[enabled_key] = true unless truthy?(next_config[enabled_key])
+          return log(record, legacy_name, enabled_key) if dry_run
 
-          if dry_run
-            log(record, legacy_name, enabled_key)
-          else
-            record.update!(config: stringify_config(next_config))
-          end
-
-          @migrated += 1
+          record.update!(config: stringify_config(next_config))
         end
 
         def stringify_config(config)

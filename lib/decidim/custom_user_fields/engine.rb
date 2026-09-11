@@ -30,7 +30,6 @@ module Decidim
 
       initializer "decidim_custom_user_fields.dev_scenarios" do
         next unless Rails.env.development?
-        next unless defined?(Decidim::CustomUserFields::ScenarioCustomizations)
 
         require "decidim/custom_user_fields/dev/scenario_customizations"
         Rails.application.config.to_prepare do

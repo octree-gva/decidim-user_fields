@@ -18,8 +18,6 @@ module Decidim
         blocked
         confirmed_at
         officialized_at
-        confirmed_at
-        confirmed_at
       ).freeze
 
       FIRST_LOGIN_MODES = %w(prompt_authorization none).freeze
@@ -42,17 +40,12 @@ module Decidim
         end
 
         def enabled_customization_names(organization)
-          config = toggle_config(organization)
+          config = raw_toggle_config(organization)
           enabled = enabled_from_customization_flags(config)
           return enabled if enabled.any?
+          return [] if legacy_config_superseded?(config)
 
-          raw = raw_toggle_config(organization)
-          enabled = enabled_from_customization_flags(raw)
-          return enabled if enabled.any?
-
-          return [] if legacy_config_superseded?(raw)
-
-          legacy_name = raw[:active_field_set] || raw["active_field_set"]
+          legacy_name = config[:active_field_set].presence
           legacy_name.present? ? [legacy_name.to_s] : []
         end
 
@@ -68,24 +61,7 @@ module Decidim
 
         private
 
-        def toggle_config(organization)
-          normalize_toggle_config(fetch_toggle_config(organization))
-        rescue StandardError
-          {}
-        end
-
-        def fetch_toggle_config(organization)
-          Decidim::Toggle.config_for(organization, :custom_user_fields)
-        end
-
-        def normalize_toggle_config(config)
-          hash = config.respond_to?(:to_config_hash) ? config.to_config_hash : config
-          hash.with_indifferent_access
-        end
-
         def raw_toggle_config(organization)
-          return {} unless defined?(Decidim::Toggle::OrganizationModuleConfig)
-
           Decidim::Toggle::OrganizationModuleConfig.find_by(
             decidim_organization_id: organization.id,
             module_name: "custom_user_fields"

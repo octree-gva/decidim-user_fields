@@ -21,20 +21,20 @@ describe Decidim::CustomUserFields::Upgrade::MigrateToggleConfig do
   end
 
   describe ".run" do
-    it "migrates active_field_set to {name}_enabled and removes the legacy key" do
+    it "migrates active_field_set to enabled_customization and removes the legacy key" do
       save_toggle_config!("active_field_set" => "default", "other" => "keep")
 
       result = described_class.run
 
       expect(result).to eq(migrated: 1, skipped: 0)
       record = config_for_org
-      expect(record.config["default_enabled"]).to be(true)
+      expect(record.config["enabled_customization"]).to eq("default")
       expect(record.config["other"]).to eq("keep")
       expect(record.config).not_to have_key("active_field_set")
     end
 
     it "skips rows without active_field_set" do
-      save_toggle_config!("default_enabled" => true)
+      save_toggle_config!("enabled_customization" => "default")
 
       result = described_class.run
 
@@ -42,7 +42,7 @@ describe Decidim::CustomUserFields::Upgrade::MigrateToggleConfig do
     end
 
     it "is idempotent when active_field_set was already migrated" do
-      save_toggle_config!("default_enabled" => true)
+      save_toggle_config!("enabled_customization" => "default")
 
       expect(described_class.run).to eq(migrated: 0, skipped: 1)
       expect(described_class.run).to eq(migrated: 0, skipped: 1)
@@ -56,6 +56,7 @@ describe Decidim::CustomUserFields::Upgrade::MigrateToggleConfig do
       record = config_for_org
       expect(record.config["active_field_set"]).to eq("community")
       expect(record.config["community_enabled"]).to be_nil
+      expect(record.config["enabled_customization"]).to be_nil
     end
   end
 end

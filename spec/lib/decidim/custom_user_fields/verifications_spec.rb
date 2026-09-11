@@ -36,9 +36,11 @@ describe Decidim::CustomUserFields::Verifications do
         organization = create(:organization)
 
         expect(described_class.selectable_workflows(organization).map(&:name)).not_to include("ngo_verify")
+        expect(Decidim::Toggle.authorization_workflows_for(organization).map(&:name)).not_to include("ngo_verify")
 
         enable_customization_for(organization, :community)
         expect(described_class.selectable_workflows(organization).map(&:name)).to include("ngo_verify")
+        expect(Decidim::Toggle.authorization_workflows_for(organization).map(&:name)).to include("ngo_verify")
       end
     end
   end

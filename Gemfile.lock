@@ -1,18 +1,19 @@
 GIT
   remote: https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-toggle
-  revision: 5c8ff751a5d270111b3dd4bd62f941db868ff264
+  revision: d571f645c298a189cdc312e4e2e55fc9240009cb
   branch: main
   specs:
-    decidim-toggle (0.1.0)
-      decidim-core (~> 0.29)
-      decidim-system (~> 0.29)
+    decidim-toggle (0.1.3)
+      decidim-core (>= 0.29, < 0.33)
+      decidim-system (>= 0.29, < 0.33)
+      deface (~> 1.9.0)
 
 PATH
   remote: .
   specs:
     decidim-user_fields (0.1.5)
       decidim-core (>= 0.29)
-      decidim-toggle (>= 0.1)
+      decidim-toggle (>= 0.1.3)
       decidim-verifications (>= 0.29)
       deface (>= 1.9)
 
@@ -165,7 +166,7 @@ GEM
     crass (1.0.7)
     css_parser (1.22.0)
       addressable
-    csv (3.3.5)
+    csv (3.3.6)
     dartsass (1.49.8)
     date (3.5.1)
     date_validator (0.12.0)
@@ -367,7 +368,7 @@ GEM
       nokogiri (>= 1.18.2)
       rubyzip (~> 2.3.0)
     docile (1.4.1)
-    doorkeeper (5.9.3)
+    doorkeeper (5.9.7)
       railties (>= 5)
     doorkeeper-i18n (4.0.1)
     drb (2.2.3)
@@ -470,8 +471,8 @@ GEM
       ruby-vips (>= 2.0.17, < 3)
     invisible_captcha (0.13.0)
       rails (>= 3.2.0)
-    io-console (0.8.2)
-    json (2.21.1)
+    io-console (0.9.2)
+    json (2.21.2)
     json-jwt (1.17.1)
       activesupport (>= 4.2)
       aes_key_wrap
@@ -536,12 +537,12 @@ GEM
     mutex_m (0.3.0)
     net-http (0.9.1)
       uri (>= 0.11.1)
-    net-imap (0.6.4.1)
+    net-imap (0.6.7)
       date
       net-protocol
     net-pop (0.1.2)
       net-protocol
-    net-protocol (0.2.2)
+    net-protocol (0.3.0)
       timeout
     net-smtp (0.3.4)
       net-protocol
@@ -576,8 +577,8 @@ GEM
       rack-protection
     omniauth-facebook (5.0.0)
       omniauth-oauth2 (~> 1.2)
-    omniauth-google-oauth2 (1.2.2)
-      jwt (>= 2.9.2)
+    omniauth-google-oauth2 (1.2.3)
+      jwt (>= 2.9.2, < 4)
       oauth2 (~> 2.0)
       omniauth (~> 2.0)
       omniauth-oauth2 (~> 1.8)
@@ -642,7 +643,7 @@ GEM
     puma (6.6.0)
       nio4r (~> 2.0)
     racc (1.8.1)
-    rack (2.2.23)
+    rack (2.2.24)
     rack-attack (6.8.0)
       rack (>= 1.0, < 4)
     rack-cors (1.1.1)
@@ -657,8 +658,8 @@ GEM
     rack-protection (3.2.0)
       base64 (>= 0.1.0)
       rack (~> 2.2, >= 2.2.4)
-    rack-proxy (0.8.3)
-      rack
+    rack-proxy (2.0.0)
+      rack (>= 2.0, < 4)
     rack-test (2.2.0)
       rack (>= 1.3)
     rails (7.0.10)
@@ -708,11 +709,11 @@ GEM
     redcarpet (3.6.1)
     redis (4.8.1)
     regexp_parser (2.10.0)
-    reline (0.6.3)
+    reline (0.7.0)
       io-console (~> 0.5)
     request_store (1.5.1)
       rack (>= 1.4)
-    responders (3.2.0)
+    responders (3.2.1)
       actionpack (>= 7.0)
       railties (>= 7.0)
     rexml (3.4.1)
@@ -826,11 +827,11 @@ GEM
       attr_required (>= 0.0.5)
       faraday (~> 2.0)
       faraday-follow_redirects
-    temple (0.10.4)
+    temple (0.10.7)
     terminal-table (4.0.0)
       unicode-display_width (>= 1.1.1, < 4)
     thor (1.5.0)
-    tilt (2.8.0)
+    tilt (2.9.0)
     timeout (0.6.1)
     trailblazer-option (0.1.2)
     tzinfo (2.0.6)
@@ -847,7 +848,7 @@ GEM
     validate_url (1.0.15)
       activemodel (>= 3.0.0)
       public_suffix
-    version_gem (1.1.14)
+    version_gem (1.1.15)
     w3c_rspec_validators (0.3.0)
       rails
       rspec
@@ -886,7 +887,7 @@ GEM
     wisper-rspec (1.1.0)
     xpath (3.2.0)
       nokogiri (~> 1.8)
-    zeitwerk (2.8.2)
+    zeitwerk (2.8.3)
 
 PLATFORMS
   x86_64-linux

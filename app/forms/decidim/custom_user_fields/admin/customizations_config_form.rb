@@ -23,19 +23,8 @@ module Decidim
 
         class << self
           def from_model(organization)
-            super.tap(&:assign_enabled_customization_from_flags)
-          end
-
-          def register_toggle_attribute!(customization_name)
-            attr = :"#{customization_name}_enabled"
-            return if attribute_types.has_key?(attr.to_s)
-
-            attribute attr, :boolean
-          end
-
-          def enabled_customization_names_from(form)
-            Customizations.all.filter_map do |customization|
-              customization.name.to_s if form.public_send(:"#{customization.name}_enabled")
+            super.tap do |form|
+              form.enabled_customization = RegistrationFields.enabled_customization_names(organization).first.to_s
             end
           end
 
@@ -59,35 +48,9 @@ module Decidim
               [name, ::I18n.t("#{name}_enabled", scope: "decidim_toggle.system.custom_user_fields")]
             end
           end
-
-          def visible_toggle_attribute_names
-            attribute_types.keys.map(&:to_sym).reject do |name|
-              name == :id || name == :first_login_mode || name.to_s.end_with?("_enabled")
-            end
-          end
-        end
-
-        def assign_enabled_customization_from_flags
-          self.enabled_customization = self.class.enabled_customization_names_from(self).first.to_s
-        end
-
-        def to_h
-          apply_exclusive_enabled_flags
-          super.except("enabled_customization", :enabled_customization)
         end
 
         private
-
-        def apply_exclusive_enabled_flags
-          selected = exclusive_enabled_name
-          Customizations.all.each do |customization|
-            public_send(:"#{customization.name}_enabled=", customization.name.to_s == selected)
-          end
-        end
-
-        def exclusive_enabled_name
-          enabled_customization.to_s.presence || self.class.enabled_customization_names_from(self).first.to_s
-        end
 
         def allowed_enabled_customization_values
           Customizations.all.map { |customization| customization.name.to_s }

@@ -41,12 +41,7 @@ module Decidim
 
         def enabled_customization_names(organization)
           config = raw_toggle_config(organization)
-          enabled = enabled_from_customization_flags(config)
-          return enabled if enabled.any?
-          return [] if legacy_config_superseded?(config)
-
-          legacy_name = config[:active_field_set].presence
-          legacy_name.present? ? [legacy_name.to_s] : []
+          from_enabled_customization_key(config) || from_legacy_enabled_flags(config)
         end
 
         def active_registration_fields(organization)
@@ -66,6 +61,21 @@ module Decidim
             decidim_organization_id: organization.id,
             module_name: "custom_user_fields"
           )&.config&.with_indifferent_access || {}
+        end
+
+        def from_enabled_customization_key(config)
+          return unless config.has_key?(:enabled_customization)
+
+          name = config[:enabled_customization].to_s
+          Customizations.find(name) ? [name] : []
+        end
+
+        def from_legacy_enabled_flags(config)
+          enabled = enabled_from_customization_flags(config)
+          return enabled.first(1) if enabled.any?
+          return [] if legacy_config_superseded?(config)
+
+          Array(config[:active_field_set].presence&.to_s)
         end
 
         def customization_enabled?(config, name)

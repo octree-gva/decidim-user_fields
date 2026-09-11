@@ -17,7 +17,7 @@ describe Decidim::CustomUserFields::Customizations do
       end
     end
 
-    it "registers toggle attributes on the admin form" do
+    it "does not add per-customization boolean attributes on the admin form" do
       with_customizations do
         Decidim::CustomUserFields.register_customization(:community) do |customization|
           customization.registration_fields { |set| set.add_field(:social_url, type: :text) }
@@ -25,7 +25,10 @@ describe Decidim::CustomUserFields::Customizations do
 
         expect(
           Decidim::CustomUserFields::Admin::CustomizationsConfigForm.attribute_types
-        ).to have_key("community_enabled")
+        ).to have_key("enabled_customization")
+        expect(
+          Decidim::CustomUserFields::Admin::CustomizationsConfigForm.attribute_types
+        ).not_to have_key("community_enabled")
       end
     end
   end

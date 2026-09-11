@@ -18,7 +18,7 @@ describe Decidim::CustomUserFields::AuthorizationsController, :custom_user_field
       Decidim::Toggle.save_config!(
         organization,
         :custom_user_fields,
-        { "birthdate_age_gates_enabled" => true, "first_login_mode" => "prompt_authorization" },
+        { "enabled_customization" => "birthdate_age_gates", "first_login_mode" => "prompt_authorization" },
         merge: false
       )
 
@@ -33,7 +33,7 @@ describe Decidim::CustomUserFields::AuthorizationsController, :custom_user_field
       Decidim::Toggle.save_config!(
         organization,
         :custom_user_fields,
-        { "birthdate_age_gates_enabled" => true, "first_login_mode" => "none" },
+        { "enabled_customization" => "birthdate_age_gates", "first_login_mode" => "none" },
         merge: false
       )
 

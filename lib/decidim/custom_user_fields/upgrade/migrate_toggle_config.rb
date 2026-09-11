@@ -3,7 +3,7 @@
 module Decidim
   module CustomUserFields
     module Upgrade
-      # One-time migration: decidim-toggle config `active_field_set` → `{name}_enabled`.
+      # One-time migration: decidim-toggle config `active_field_set` → `enabled_customization`.
       class MigrateToggleConfig
         MODULE_NAME = "custom_user_fields"
         LEGACY_KEY = "active_field_set"
@@ -51,10 +51,9 @@ module Decidim
         end
 
         def persist_migrated!(record, config, legacy_name)
-          enabled_key = "#{legacy_name}_enabled"
           next_config = config.except(LEGACY_KEY)
-          next_config[enabled_key] = true unless truthy?(next_config[enabled_key])
-          return log(record, legacy_name, enabled_key) if dry_run
+          next_config[:enabled_customization] ||= legacy_name.to_s
+          return log(record, legacy_name) if dry_run
 
           record.update!(config: stringify_config(next_config))
         end
@@ -63,14 +62,10 @@ module Decidim
           config.to_h.stringify_keys
         end
 
-        def truthy?(value)
-          ActiveModel::Type::Boolean.new.cast(value)
-        end
-
-        def log(record, legacy_name, enabled_key)
+        def log(record, legacy_name)
           Rails.logger.debug do
             "[dry-run] org #{record.decidim_organization_id}: " \
-              "#{LEGACY_KEY}=#{legacy_name} → #{enabled_key}=true"
+              "#{LEGACY_KEY}=#{legacy_name} → enabled_customization=#{legacy_name}"
           end
         end
       end

@@ -103,7 +103,7 @@ module Decidim
           Decidim::Toggle.save_config!(
             organization,
             :custom_user_fields,
-            { "#{customization}_enabled" => true },
+            { "enabled_customization" => customization.to_s },
             merge: false
           )
         end

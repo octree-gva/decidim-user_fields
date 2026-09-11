@@ -30,9 +30,13 @@ module Decidim
           end
         end
 
-        def enable_customization_for(organization, *names)
-          config = names.index_with { true }.transform_keys { |name| :"#{name}_enabled" }
-          Decidim::Toggle.save_config!(organization, :custom_user_fields, config, merge: false)
+        def enable_customization_for(organization, name)
+          Decidim::Toggle.save_config!(
+            organization,
+            :custom_user_fields,
+            { "enabled_customization" => name.to_s },
+            merge: true
+          )
         end
 
         def ephemeral_participation_gem?

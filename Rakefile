@@ -41,6 +41,26 @@ ensure
   copy_dummy_shakapacker_yml!(dummy_root)
 end
 
+def inject_toggle_into_dummy_gemfile!(dummy_root)
+  gemfile = File.join(dummy_root, "Gemfile")
+  return unless File.exist?(gemfile)
+
+  contents = File.read(gemfile).sub(dummy_toggle_gem_pattern, "")
+  File.write(gemfile, "#{contents.rstrip}\n\n#{dummy_toggle_gem_declaration}\n")
+end
+
+def dummy_toggle_gem_pattern
+  /^[ \t]*gem ["']decidim-toggle["'][^\n]*(?:\n[ \t]+(?:git:|github:|branch:|tag:|path:|ref:)[^\n]*)*\n?/
+end
+
+def dummy_toggle_gem_declaration
+  <<~RUBY.strip
+    gem "decidim-toggle",
+        git: "https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-toggle",
+        branch: "main"
+  RUBY
+end
+
 def install_module(path)
   Dir.chdir(path) do
     Bundler.with_unbundled_env do
@@ -146,6 +166,7 @@ task :test_app do
     end
   end
   inject_ephemeral_into_dummy_gemfile!(dummy_root, enabled: needs_ephemeral)
+  inject_toggle_into_dummy_gemfile!(dummy_root)
   # Install under with_unbundled_env before install_module (needs `bundle exec rails`).
   Dir.chdir(File.expand_path("spec/decidim_dummy_app", __dir__)) do
     Bundler.with_unbundled_env do

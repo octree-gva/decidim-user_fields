@@ -84,11 +84,11 @@ Sysadmins enable at most one customization per organization (radio). Bundled aut
 
 User values in `extended_data` and existing authorization grants are unchanged when field and handler names stay the same.
 
-Toggle config migrates from `{ "active_field_set": "default" }` to `{ "default_enabled": true }`.
+Toggle config migrates from `{ "active_field_set": "default" }` to `{ "enabled_customization": "default" }`.
 
 On deploy, `bin/rails decidim:upgrade` (or `decidim:update`) runs `decidim_custom_user_fields:upgrade:migrate_toggle_config` automatically.
 
-Until that runs, the module still reads `active_field_set` when no `{name}_enabled` keys exist.
+Until that runs, the module still reads `active_field_set` and legacy `{name}_enabled` flags when `enabled_customization` is absent.
 
 Manual run:
 

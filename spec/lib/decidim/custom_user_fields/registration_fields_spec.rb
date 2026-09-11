@@ -24,6 +24,21 @@ describe Decidim::CustomUserFields::RegistrationFields do
       end
     end
 
+    it "prefers enabled_customization over legacy flags" do
+      with_customizations do
+        register_test_customization(:community)
+        register_test_customization(:ngos)
+        Decidim::Toggle.save_config!(
+          organization,
+          :custom_user_fields,
+          { "enabled_customization" => "ngos", "community_enabled" => true },
+          merge: false
+        )
+
+        expect(described_class.enabled_customization_names(organization)).to eq(%w(ngos))
+      end
+    end
+
     it "falls back to active_field_set when no customization flags exist" do
       with_customizations do
         register_test_customization(:default) do |customization|
@@ -61,7 +76,7 @@ describe Decidim::CustomUserFields::RegistrationFields do
       end
     end
 
-    it "returns fields from all enabled customizations" do
+    it "returns fields from the enabled customization" do
       with_customizations do
         register_test_customization(:community) do |customization|
           customization.registration_fields { |set| set.add_field(:foo, type: :dummy) }
@@ -69,11 +84,11 @@ describe Decidim::CustomUserFields::RegistrationFields do
         register_test_customization(:ngos) do |customization|
           customization.registration_fields { |set| set.add_field(:bar, type: :dummy) }
         end
-        enable_customization_for(organization, :community, :ngos)
+        enable_customization_for(organization, :community)
 
-        expect(described_class.enabled_customization_names(organization)).to eq(%w(community ngos))
+        expect(described_class.enabled_customization_names(organization)).to eq(%w(community))
         fields = described_class.active_registration_fields(organization)
-        expect(fields.map(&:name)).to contain_exactly(:community_foo, :ngos_bar)
+        expect(fields.map(&:name)).to eq([:community_foo])
       end
     end
   end

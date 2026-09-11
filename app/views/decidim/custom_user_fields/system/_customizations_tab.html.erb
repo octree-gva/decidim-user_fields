@@ -11,5 +11,5 @@
         ) %>
     <p class="field-helptext"><%= t("decidim_toggle.system.custom_user_fields.helptext.first_login_mode") %></p>
   </div>
-  <%= tf.fields_for_names(*form_class.visible_toggle_attribute_names) %>
+  <%= tf.fields_for_names(:enabled_customization) %>
 <% end %>

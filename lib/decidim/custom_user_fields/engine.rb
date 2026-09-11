@@ -37,6 +37,15 @@ module Decidim
         end
       end
 
+      initializer "decidim_custom_user_fields.authorization_workflow_filter" do
+        Decidim::Toggle.filter_authorization_workflows do |workflow, organization|
+          Verifications.selectable_workflow?(
+            workflow,
+            Verifications.enabled_customization_names(organization)
+          )
+        end
+      end
+
       initializer "decidim_custom_user_fields.organization_settings_tab",
                   after: "decidim_toggle.organization_settings_tabs" do
         Decidim::Toggle.settings_tabs :organization_settings do |tabs|

@@ -10,20 +10,13 @@ module Decidim
           association: %w(association_only)
         }.freeze
 
-        def enable_customization_for(organization, *names)
-          config = Decidim::Toggle.config_for(organization, :custom_user_fields).dup
-          names.each { |name| config[:"#{name}_enabled"] = true }
-          Decidim::Toggle.save_config!(organization, :custom_user_fields, config)
-        rescue StandardError
-          config = names.index_with { true }.transform_keys { |name| :"#{name}_enabled" }
-          Decidim::Toggle.save_config!(organization, :custom_user_fields, config)
-        end
-
         def disable_all_customizations_for(organization)
-          config = Decidim::CustomUserFields::Customizations.all.to_h do |customization|
-            [:"#{customization.name}_enabled", false]
-          end
-          Decidim::Toggle.save_config!(organization, :custom_user_fields, config)
+          Decidim::Toggle.save_config!(
+            organization,
+            :custom_user_fields,
+            { "enabled_customization" => "" },
+            merge: true
+          )
         end
 
         def fill_registration_form_base(name: "Nikola Tesla", email: "nikola.tesla@example.org", password: "decidim123456789")

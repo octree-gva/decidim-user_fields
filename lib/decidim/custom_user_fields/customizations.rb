@@ -12,7 +12,6 @@ module Decidim
           registry[name.to_sym] = customization
           builder = Builder.new(customization)
           yield builder
-          Decidim::CustomUserFields::Admin::CustomizationsConfigForm.register_toggle_attribute!(name)
           customization
         end
 

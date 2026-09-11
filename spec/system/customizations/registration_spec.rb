@@ -76,32 +76,13 @@ describe "Custom user fields registration", :custom_user_fields_scenarios do
     end
   end
 
-  context "with birthdate and association customizations enabled together" do
-    before { enable_customization_for(organization, :birthdate_age_gates, :association) }
+  context "with association customization enabled instead of birthdate" do
+    before { enable_customization_for(organization, :association) }
 
-    it "still requires the association boolean" do
+    it "shows the association field and not the birthdate field" do
       visit decidim.new_user_registration_path
-      expect_custom_date_field("registration_user_birthdate_age_gates_birthdate", label: "Birthdate")
       expect(page).to have_field("registration_user_association_represent_association")
-
-      fill_registration_form_base(email: "multi.missing@example.org")
-      fill_custom_date_field("registration_user_birthdate_age_gates_birthdate", age: 20)
-      submit_registration_form
-
-      expect(page).to have_current_path decidim.user_registration_path
-    end
-
-    it "registers when association is checked and birthdate is filled" do
-      visit decidim.new_user_registration_path
-      fill_registration_form_base(email: "multi.ok@example.org")
-      fill_custom_date_field("registration_user_birthdate_age_gates_birthdate", age: 20)
-      check "registration_user_association_represent_association"
-      submit_registration_form
-
-      expect(page).to have_content("confirmation link")
-      user = Decidim::User.find_by(email: "multi.ok@example.org")
-      expect(user.extended_data["association_represent_association"]).to be(true)
-      expect(user.extended_data["birthdate_age_gates_birthdate"]).to eq(birthdate_for_age(20))
+      expect(page).to have_no_field("registration_user_birthdate_age_gates_birthdate_date")
     end
   end
 end

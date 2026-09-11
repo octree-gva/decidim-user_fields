@@ -11,7 +11,7 @@ describe Decidim::CustomUserFields::Admin::CustomizationsConfigForm do
         register_test_customization(:community)
 
         form = described_class.from_params(
-          organization: { community_enabled: false }
+          organization: { enabled_customization: "" }
         ).with_context(current_organization: organization)
 
         expect(form).to be_valid
@@ -23,49 +23,49 @@ describe Decidim::CustomUserFields::Admin::CustomizationsConfigForm do
         register_test_customization(:community)
 
         form = described_class.from_params(
-          organization: { community_enabled: true }
+          organization: { enabled_customization: "community" }
         ).with_context(current_organization: organization)
 
         expect(form).to be_valid
       end
     end
 
-    it "maps the radio to a single enabled customization" do
+    it "persists the radio value" do
       with_customizations do
         register_test_customization(:community)
         register_test_customization(:ngos)
 
         form = described_class.from_params(
-          organization: { enabled_customization: "ngos", community_enabled: true }
+          organization: { enabled_customization: "ngos" }
         ).with_context(current_organization: organization)
 
         expect(form).to be_valid
         persist = form.to_h.with_indifferent_access
-        expect(persist[:community_enabled]).to be(false)
-        expect(persist[:ngos_enabled]).to be(true)
-        expect(persist).not_to have_key(:enabled_customization)
-        expect(described_class.enabled_customization_names_from(form)).to eq(%w(ngos))
+        expect(persist[:enabled_customization]).to eq("ngos")
+        expect(persist).not_to have_key(:community_enabled)
       end
     end
 
-    it "keeps a single flag when params still send multiple booleans" do
-      with_customizations do
-        register_test_customization(:community)
-        register_test_customization(:ngos)
-
-        form = described_class.from_params(
-          organization: { community_enabled: true, ngos_enabled: true }
-        ).with_context(current_organization: organization)
-
-        form.to_h
-        expect(described_class.enabled_customization_names_from(form)).to eq(%w(community))
-      end
-    end
-
-    it "loads the radio from stored enabled flags" do
+    it "loads the radio from stored config" do
       with_customizations do
         register_test_customization(:community)
         enable_customization_for(organization, :community)
+
+        form = described_class.from_model(organization)
+
+        expect(form.enabled_customization).to eq("community")
+      end
+    end
+
+    it "loads the radio from legacy enabled flags" do
+      with_customizations do
+        register_test_customization(:community)
+        Decidim::Toggle.save_config!(
+          organization,
+          :custom_user_fields,
+          { "community_enabled" => true },
+          merge: false
+        )
 
         form = described_class.from_model(organization)
 
@@ -82,7 +82,7 @@ describe Decidim::CustomUserFields::Admin::CustomizationsConfigForm do
         organization.update!(available_authorizations: ["ngo_verify"])
 
         form = described_class.from_params(
-          organization: { community_enabled: false }
+          organization: { enabled_customization: "" }
         ).with_context(current_organization: organization)
 
         expect(form).to be_valid
@@ -94,7 +94,7 @@ describe Decidim::CustomUserFields::Admin::CustomizationsConfigForm do
         register_test_customization(:community)
 
         form = described_class.from_params(
-          organization: { first_login_mode: "none", community_enabled: false }
+          organization: { first_login_mode: "none", enabled_customization: "" }
         ).with_context(current_organization: organization)
 
         expect(form).to be_valid

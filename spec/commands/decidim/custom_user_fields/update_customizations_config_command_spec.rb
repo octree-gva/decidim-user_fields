@@ -13,7 +13,7 @@ describe Decidim::CustomUserFields::UpdateCustomizationsConfigCommand do
       enable_customization_for(organization, :community)
 
       form = Decidim::CustomUserFields::Admin::CustomizationsConfigForm.from_params(
-        organization: { community_enabled: false }
+        organization: { enabled_customization: "" }
       ).with_context(current_organization: organization)
 
       outcomes = []
@@ -43,7 +43,7 @@ describe Decidim::CustomUserFields::UpdateCustomizationsConfigCommand do
       )
 
       form = Decidim::CustomUserFields::Admin::CustomizationsConfigForm.from_params(
-        organization: { community_enabled: false }
+        organization: { enabled_customization: "" }
       ).with_context(current_organization: organization)
 
       described_class.new(organization, form).call

@@ -148,7 +148,7 @@ describe Decidim::CustomUserFields::FormDefinition do
     end
   end
 
-  it "validates required fields from every active customization" do
+  it "validates required fields from the enabled customization only" do
     with_customizations do
       organization = create(:organization)
       register_test_customization(:community) do |customization|
@@ -158,7 +158,7 @@ describe Decidim::CustomUserFields::FormDefinition do
         customization.registration_fields { |set| set.add_field(:role, type: :text, required: true) }
       end
       Decidim::CustomUserFields::FormDefinition.setup_form_class(Decidim::RegistrationForm)
-      enable_customization_for(organization, :community, :ngos)
+      enable_customization_for(organization, :community)
 
       base_params = {
         name: "Ada Lovelace",
@@ -173,10 +173,10 @@ describe Decidim::CustomUserFields::FormDefinition do
       )
       expect(invalid).not_to be_valid
       expect(invalid.errors[:community_city]).to be_present
-      expect(invalid.errors[:ngos_role]).to be_present
+      expect(invalid.errors[:ngos_role]).to be_blank
 
       valid = Decidim::RegistrationForm.from_params(
-        user: base_params.merge(community_city: "Paris", ngos_role: "member")
+        user: base_params.merge(community_city: "Paris")
       ).with_context(current_organization: organization)
       expect(valid).to be_valid
     end

@@ -32,7 +32,7 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
 
   it "renders customization options as radios" do
     within_customizations_tab do
-      expect(page).to have_field("organization_enabled_customization_birthdate_age_gates", type: :radio)
+      expect(page).to have_field("Birthdate age gates", type: :radio)
       expect(page).to have_no_field("organization_birthdate_age_gates_enabled")
     end
   end
@@ -50,7 +50,7 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
       expect(page).to have_content("16 plus")
       expect(page).to have_content("18 plus")
 
-      check "organization_available_authorizations_sixteen_plus"
+      check "16 plus"
       click_on "Save"
     end
 
@@ -139,7 +139,7 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
 
     within_authorizations_tab do
       expect(page).to have_css("input[id^='organization_available_authorizations_']")
-      check "organization_available_authorizations_sixteen_plus"
+      check "16 plus"
       click_on "Save"
     end
 

@@ -101,17 +101,18 @@ Refactor your initializer from `register_field_set` to `register_customization`,
 
 ## Try Omniauth locally (Zitadel + Docker)
 
-**Prerequisite:** Docker and Docker Compose.
+Local review of this gem (clone this repo). Integrators adding the gem to an existing Decidim app: see **Install the module** above.
 
-`docker compose up` starts infrastructure only (Postgres, Zitadel, MailCatcher). It does **not** start Decidim — there is no idle `decidim` service in the default stack.
+**Prerequisite:** Docker and Docker Compose.
 
 ### Quick start
 
-One command — setup (~5–10 min first time) then Decidim on http://localhost:3000:
+1. Clone this repository.
+2. `./bin/dev-oidc-up`
+3. Wait (~5–10 min the first time).
+4. Open http://localhost:3000.
 
-```bash
-./bin/dev-oidc-up
-```
+Unlike `spam_signal` / `voca`, default `docker compose up` does **not** start a Decidim process; do not use `docker compose up -d decidim` for first success.
 
 Idempotent: safe to re-run when the stack is already up.
 
@@ -122,7 +123,7 @@ Idempotent: safe to re-run when the stack is already up.
 | 1 | Start Zitadel stack | Zitadel on :8080, admin PAT in `docker/zitadel/bootstrap/admin.pat` |
 | 2 | Configure Zitadel SMTP + OIDC app | `docker/zitadel/oidc.env` (gitignored) |
 | 3 | `rake test_app` (first time only) | Dummy app in `spec/decidim_dummy_app` |
-| 4 | `dev:prepare_secrets`, `db:schema:load` | Empty Decidim schema |
+| 4 | `dev:prepare_secrets`, `db:drop db:create db:migrate` | Empty Decidim schema |
 | 5 | `dev:seed` | Minimal org + admin + Zitadel provider + **association** scenario |
 | 6 | `docker compose --profile dev run --rm --service-ports decidim … rails s` | Rails on http://localhost:3000 (foreground) |
 
@@ -177,9 +178,10 @@ Generated at setup time (do not commit): `docker/zitadel/oidc.env` — see `dock
 | `connection refused` to `localhost:8080` on Zitadel login | Re-run `./bin/dev-oidc-up` — token/userinfo must use `zitadel:8080` inside Docker |
 | Zitadel login fails with `"Unknown"` / `Instance not found` | Ensure `ZITADEL_PUBLIC_HOST=localhost:8080` on the Decidim container (Host header for internal calls) |
 | OIDC completes custom fields but asks for email confirmation | Re-run `./bin/dev-oidc-up` after updating the gem — OpenID Connect verified emails should sign you in directly |
-| Port 3000 empty | Do not use plain `docker compose up` (no Rails service without a profile) — use `./bin/dev-oidc-up` |
+| Port 3000 empty | Do not use plain `docker compose up` or `docker compose up -d decidim` — use `./bin/dev-oidc-up` |
+| `cd: spec/decidim_dummy_app: No such file or directory` (or missing `config/application.rb`) | Optional `docker compose down -v`, then `./bin/dev-oidc-up` (script runs `rake test_app` before any dummy `cd`) |
 | `network … not found` when starting Rails | Stale compose network after one-shots — re-run `./bin/dev-oidc-up` (script no longer uses `profile web up`) |
-| `decidim_users already exists` on setup | Re-run `docker compose down -v && ./bin/dev-oidc-up` (script now runs `db:schema:load`) |
+| `decidim_users already exists` on setup | Re-run `docker compose down -v && ./bin/dev-oidc-up` (script runs `db:drop db:create db:migrate`) |
 | `A server is already running` / stale `server.pid` | `rm -f spec/decidim_dummy_app/tmp/pids/server.pid` then re-run `./bin/dev-oidc-up` |
 
 Reset all local data: `docker compose down -v` then `./bin/dev-oidc-up`.
@@ -345,6 +347,18 @@ The `decidim` compose service is the OIDC/dev container (shell or Rails). `./bin
 # Interactive shell in the dev container
 docker compose --profile dev run --rm decidim bash
 
+# CI-shaped specs (default Gemfile, no ephemeral gem)
+docker compose -f docker-compose.ci.yml run --rm rspec
+
+# Same specs with decidim-ephemeral_participation (Appraisal `with_ephemeral`)
+docker compose -f docker-compose.ci.yml run --rm -e BUNDLE_GEMFILE=/app/gemfiles/with_ephemeral.gemfile rspec
+```
+
+### Advanced — dummy already generated
+
+Use these only after `spec/decidim_dummy_app/config/application.rb` exists (`./bin/dev-oidc-up` or `rake test_app`).
+
+```bash
 # Rails only (infra must already be up — e.g. after a partial setup)
 docker compose --profile dev run --rm --service-ports decidim bash -c \
   "cd /home/module/spec/decidim_dummy_app && rm -f tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0 -p 3000"
@@ -352,12 +366,6 @@ docker compose --profile dev run --rm --service-ports decidim bash -c \
 # Specs (from repo root, dummy app Gemfile)
 docker compose --profile dev run --rm decidim bash -c \
   "cd /home/module && BUNDLE_GEMFILE=spec/decidim_dummy_app/Gemfile bundle exec rspec"
-
-# CI-shaped specs (default Gemfile, no ephemeral gem)
-docker compose -f docker-compose.ci.yml run --rm rspec
-
-# Same specs with decidim-ephemeral_participation (Appraisal `with_ephemeral`)
-docker compose -f docker-compose.ci.yml run --rm -e BUNDLE_GEMFILE=/app/gemfiles/with_ephemeral.gemfile rspec
 ```
 
 Regenerate the dummy app when switching `BUNDLE_GEMFILE` (`rake test_app` in that bundle). Default CI has no ephemeral gem; `ruby::rspec-ephemeral` installs `decidim-ephemeral_participation` `v0.0.9`.

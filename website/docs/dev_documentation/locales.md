@@ -46,7 +46,7 @@ Registration field names are prefixed with the customization name (for example `
 From the gem (Docker Compose; `ENGINE_ROOT=/home/module` is set in `docker-compose.yml`):
 
 ```bash
-docker compose run --rm --entrypoint "" decidim bundle exec i18n-tasks missing
+docker compose --profile dev run --rm --entrypoint "" decidim bundle exec i18n-tasks missing
 ```
 
 This uses `config/i18n-tasks.yml`, which registers the customization scanner. The scanner boots the dummy app when Rails is not already loaded so registered customizations are visible. If the registry cannot load, registry-derived keys are skipped and a warning is printed on stderr.

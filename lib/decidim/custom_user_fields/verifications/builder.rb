@@ -4,6 +4,17 @@ module Decidim
   module CustomUserFields
     module Verifications
       class Builder
+        include DefinitionMissing
+
+        DSL_METHODS = [
+          :add_field,
+          :renewable!,
+          :renewable?,
+          :ephemerable!,
+          :ephemerable?,
+          :register_workflow!
+        ].freeze
+
         attr_reader :name, :customization
         attr_accessor :fields, :renewable, :time_between_renewals
 

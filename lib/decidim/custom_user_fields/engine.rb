@@ -38,6 +38,8 @@ module Decidim
       end
 
       initializer "decidim_custom_user_fields.authorization_workflow_filter" do
+        next unless Decidim::Toggle.respond_to?(:filter_authorization_workflows)
+
         Decidim::Toggle.filter_authorization_workflows do |workflow, organization|
           Verifications.selectable_workflow?(
             workflow,

@@ -4,6 +4,10 @@ module Decidim
   module CustomUserFields
     module Customizations
       class Builder
+        include DefinitionMissing
+
+        DSL_METHODS = [:registration_fields, :authorization].freeze
+
         def initialize(customization)
           @customization = customization
         end
@@ -19,6 +23,10 @@ module Decidim
       end
 
       class RegistrationFieldsBuilder
+        include DefinitionMissing
+
+        DSL_METHODS = [:add_field].freeze
+
         def initialize(customization)
           @customization = customization
         end

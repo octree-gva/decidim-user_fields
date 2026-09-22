@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Mirrors GitLab CI ruby::rspec before_script. Runs inside ruby:3.2.7.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$ENGINE_ROOT"
 
 git config --global --add safe.directory "$(pwd)" || true
 
@@ -20,7 +20,5 @@ apt-get update && apt-get install -y -qq nodejs
 npm install -g yarn --force
 
 gem install bundler
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-bundle config set path "$ROOT/vendor"
 RAILS_ENV=development bundle install -j "$(nproc)" --retry 3
 bundle exec rake test_app

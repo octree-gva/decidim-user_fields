@@ -43,7 +43,7 @@ module Decidim
         when :boolean
           @field = Fields::BooleanField.new(self, kwargs)
         else
-          raise Error, "field type #{type} is not supported"
+          raise Error, DefinitionGuidance.unsupported_type_message(type)
         end
       end
 

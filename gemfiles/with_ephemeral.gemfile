@@ -35,6 +35,8 @@ end
 
 group :test do
   gem "capybara", "~> 3.40"
+  # simplecov-cobertura 2.1.0 parses a doctype-only head. rexml >= 3.4.2 rejects it.
+  gem "rexml", "3.4.1"
   gem "rspec-rails", "~> 6.0"
   gem "rubocop-faker"
   gem "selenium-webdriver"

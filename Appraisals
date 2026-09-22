@@ -17,4 +17,5 @@ appraise "with_ephemeral" do
   gem "decidim-ephemeral_participation",
       git: "https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-ephemeral_participation",
       tag: "v0.0.9"
+  gem "rexml", "3.4.1"
 end

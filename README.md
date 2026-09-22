@@ -97,7 +97,7 @@ bin/rails decidim_custom_user_fields:upgrade:migrate_toggle_config
 DRY_RUN=1 bin/rails decidim_custom_user_fields:upgrade:migrate_toggle_config
 ```
 
-Refactor your initializer from `register_field_set` to `register_customization`, keeping the same customization name as the former field set (e.g. `:default`).
+Refactor your initializer from `register_field_set` to `register_customization`, keeping the same customization name as the former field set (e.g. `:default`). Unknown or removed DSL calls (`custom_fields`, `register_field_set`, `configure { add_field }`, typos) raise `Decidim::CustomUserFields::Error` with a migration or DidYouMean hint.
 
 ## Try Omniauth locally (Zitadel + Docker)
 

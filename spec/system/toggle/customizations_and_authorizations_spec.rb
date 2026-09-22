@@ -30,6 +30,15 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
     choose(label, name: "organization[enabled_customization]")
   end
 
+  # Ephemeral mode renders an unlabeled checkbox; the id is the stable locator.
+  def check_available_authorization(workflow_name, label)
+    if ephemeral_participation_gem?
+      check "organization_available_authorizations_#{workflow_name}"
+    else
+      check label
+    end
+  end
+
   it "renders customization options as radios" do
     within_customizations_tab do
       expect(page).to have_field("Birthdate age gates", type: :radio)
@@ -50,7 +59,7 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
       expect(page).to have_content("16 plus")
       expect(page).to have_content("18 plus")
 
-      check "16 plus"
+      check_available_authorization("sixteen_plus", "16 plus")
       click_on "Save"
     end
 
@@ -139,7 +148,7 @@ describe "System organization customizations toggle", :custom_user_fields_scenar
 
     within_authorizations_tab do
       expect(page).to have_css("input[id^='organization_available_authorizations_']")
-      check "16 plus"
+      check_available_authorization("sixteen_plus", "16 plus")
       click_on "Save"
     end
 

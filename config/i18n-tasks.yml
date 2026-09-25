@@ -1,0 +1,22 @@
+# i18n-tasks for decidim-user_fields
+# https://github.com/glebm/i18n-tasks
+#
+# Host apps: add this require so customization registry keys are treated as used:
+#   <% require "decidim/custom_user_fields/i18n/tasks" %>
+<% require "decidim/custom_user_fields/i18n/tasks" %>
+
+base_locale: en
+locales: [en, fr]
+
+data:
+  read:
+    - config/locales/decidim_user_fields.%{locale}.yml
+    - config/locales/decidim_toggle.%{locale}.yml
+    - config/locales/decidim_custom_user_fields_scenarios.%{locale}.yml
+  write:
+    - config/locales/decidim_user_fields.%{locale}.yml
+
+search:
+  paths:
+    - app/
+    - lib/

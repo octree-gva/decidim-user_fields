@@ -6,9 +6,8 @@ module Decidim
       class TextField < GenericField
         def configure_form(form)
           form.attribute(name, String)
-          validations = {
-            presence: required?
-          }
+          validations = {}
+          validations[:presence] = true if required?
           if options[:values_in]
             validations[:inclusion] = {
               in: options[:values_in],
@@ -27,11 +26,21 @@ module Decidim
             }
           end
 
-          form.validates(name, validations)
+          apply_form_validations(form, validations)
         end
 
         def map_model(form, data)
           form[name] = data[name].strip if data[name].present?
+        end
+
+        def validate(value, _data, errors)
+          if required? && value.blank?
+            errors.add(name, label(:required))
+          elsif options[:values_in] && value.present? && options[:values_in].exclude?(value)
+            errors.add(name, label(:bad_values))
+          elsif options[:format] && value.present? && value !~ options[:format]
+            errors.add(name, label(:bad_format))
+          end
         end
 
         def sanitized_value(value)

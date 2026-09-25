@@ -1,6 +1,14 @@
 en:
   decidim:
     custom_user_fields:
+      system:
+        customizations_tab: "User fields"
+        first_login_mode:
+          prompt_authorization: "Prompt authorization"
+          none: "None"
+        customizations:
+          incompatible_authorizations: "Incompatible with enabled authorizations: %{authorizations}"
+          unknown_customization: "Unknown customization: %{name}"
       date:
         required: "This date is required"
         bad_format: "This date is badly formatted"

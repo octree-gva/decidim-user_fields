@@ -1,10 +1,95 @@
 # frozen_string_literal: true
 
+require "fileutils"
 require "decidim/dev/common_rake"
+
+# Dummy generation boots Rails (`app:template`) before this task can patch files.
+def dummy_shakapacker_yml_source
+  core = Gem.loaded_specs["decidim-core"]&.full_gem_path
+  from_core = core && File.join(core, "lib/decidim/webpacker/shakapacker.yml")
+  return from_core if from_core && File.exist?(from_core)
+
+  File.join(Gem.loaded_specs.fetch("shakapacker").full_gem_path, "lib/install/config/shakapacker.yml")
+end
+
+def copy_dummy_shakapacker_yml!(dummy_root)
+  dest = File.join(dummy_root, "config/shakapacker.yml")
+  return if File.exist?(dest) && !File.empty?(dest)
+  return unless File.directory?(File.join(dummy_root, "config"))
+
+  FileUtils.cp(dummy_shakapacker_yml_source, dest)
+end
+
+def poll_dummy_shakapacker_yml(dummy_root, stop)
+  thread = Thread.new do
+    until stop.call
+      copy_dummy_shakapacker_yml!(dummy_root)
+      sleep 0.1
+    end
+  end
+  thread.abort_on_exception = true
+  thread
+end
+
+def with_dummy_shakapacker_yml(dummy_root)
+  stop = false
+  thread = poll_dummy_shakapacker_yml(dummy_root, -> { stop })
+  yield
+ensure
+  stop = true
+  thread&.join
+  copy_dummy_shakapacker_yml!(dummy_root)
+end
+
+def inject_toggle_into_dummy_gemfile!(dummy_root)
+  gemfile = File.join(dummy_root, "Gemfile")
+  return unless File.exist?(gemfile)
+
+  contents = File.read(gemfile).sub(dummy_toggle_gem_pattern, "")
+  File.write(gemfile, "#{contents.rstrip}\n\n#{dummy_toggle_gem_declaration}\n")
+end
+
+def dummy_toggle_gem_pattern
+  /^[ \t]*gem ["']decidim-toggle["'][^\n]*(?:\n[ \t]+(?:git:|github:|branch:|tag:|path:|ref:)[^\n]*)*\n?/
+end
+
+def dummy_toggle_gem_declaration
+  <<~RUBY.strip
+    gem "decidim-toggle",
+        git: "https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-toggle",
+        branch: "main"
+  RUBY
+end
 
 def install_module(path)
   Dir.chdir(path) do
-    # system("bundle exec rails decidim_user_fields:install:migrations")
+    Bundler.with_unbundled_env do
+      sh "bundle exec rails decidim_toggle:install:migrations"
+      next unless File.read("Gemfile").include?("decidim-ephemeral_participation")
+
+      sh "bundle exec rails decidim_ephemeral_participation:install:migrations"
+    end
+  end
+end
+
+def ephemeral_gem_in_bundle?
+  Bundler.definition.dependencies.any? { |dep| dep.name == "decidim-ephemeral_participation" }
+end
+
+def inject_ephemeral_into_dummy_gemfile!(dummy_root, enabled: ephemeral_gem_in_bundle?)
+  return unless enabled
+
+  gemfile = File.join(dummy_root, "Gemfile")
+  contents = File.read(gemfile)
+  return if contents.include?("decidim-ephemeral_participation")
+
+  File.open(gemfile, "a") do |file|
+    file.puts <<~RUBY
+
+      gem "decidim-ephemeral_participation",
+          git: "https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-ephemeral_participation",
+          tag: "v0.0.9"
+    RUBY
   end
 end
 
@@ -19,8 +104,8 @@ task :prepare_tests do
   # Remove previous existing db, and recreate one.
   disable_docker_compose = ENV.fetch("DISABLED_DOCKER_COMPOSE", "false") == "true"
   unless disable_docker_compose
-    sh "docker-compose -f docker-compose.yml down -v"
-    sh "docker-compose -f docker-compose.yml up -d --remove-orphans"
+    sh "docker compose -f docker-compose.yml down -v"
+    sh "docker compose -f docker-compose.yml up -d --remove-orphans"
   end
   ENV["RAILS_ENV"] = "test"
   test_db = {
@@ -32,7 +117,9 @@ task :prepare_tests do
     "password" => ENV.fetch("DATABASE_PASSWORD", "TEST-baeGhi4Ohtahcee5eejoaxaiwaezaiGo"),
     "database" => "decidim_test",
     # GitLab/docker Postgres services rarely offer TLS on the internal hostname
-    "sslmode" => ENV.fetch("DATABASE_SSLMODE", "disable")
+    "sslmode" => ENV.fetch("DATABASE_SSLMODE", "disable"),
+    # Ephemeral migration changes available_authorizations array → jsonb then updates rows.
+    "prepared_statements" => false
   }
   # Dummy app is CI-only; Spring / bin/rails often boot `development` even when we intend `test`.
   # Mirror `test` so `db:migrate` never dies on missing `development` (see ActiveRecord::AdapterNotSpecified).
@@ -48,35 +135,45 @@ task :prepare_tests do
     # so `bundle exec` in the dummy app resolves that Gemfile. Use `with_unbundled_env`, not only
     # `with_original_env` (Bundler docs: subcommands in another directory).
     Bundler.with_unbundled_env do
+      # Fresh DB every run: regenerating the dummy app rewrites migration timestamps, so an
+      # existing schema (local compose volume / re-run) would hit PG::DuplicateTable.
       # Use Rake `sh` so a failed migrate aborts; `env` sets vars in the shell (reliable vs Kernel#system env quirks).
-      sh "env RAILS_ENV=test DISABLE_SPRING=1 bundle exec rails db:migrate"
+      sh "env RAILS_ENV=test DISABLE_SPRING=1 DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bundle exec rails db:drop db:create db:migrate"
     end
   end
 end
 
 desc "Generates a dummy app for testing"
 task :test_app do
-  Bundler.with_original_env do
-    generate_decidim_app(
-      "spec/decidim_dummy_app",
-      "--app_name",
-      "decidim_test",
-      "--path",
-      "../..",
-      "--skip_spring",
-      "--demo",
-      "--force_ssl",
-      "false",
-      "--locales",
-      "en,fr,es"
-    )
+  dummy_root = File.expand_path("spec/decidim_dummy_app", __dir__)
+  needs_ephemeral = ephemeral_gem_in_bundle?
+  with_dummy_shakapacker_yml(dummy_root) do
+    Bundler.with_original_env do
+      ENV.delete("BUNDLE_GEMFILE")
+      generate_decidim_app(
+        "spec/decidim_dummy_app",
+        "--app_name",
+        "decidim_test",
+        "--path",
+        "../..",
+        "--skip_spring",
+        "--demo",
+        "--force_ssl",
+        "false",
+        "--locales",
+        "en,ca,es,fr"
+      )
+    end
   end
-  install_module("spec/decidim_dummy_app")
+  inject_ephemeral_into_dummy_gemfile!(dummy_root, enabled: needs_ephemeral)
+  inject_toggle_into_dummy_gemfile!(dummy_root)
+  # Install under with_unbundled_env before install_module (needs `bundle exec rails`).
   Dir.chdir(File.expand_path("spec/decidim_dummy_app", __dir__)) do
     Bundler.with_unbundled_env do
       sh "bundle install -j $(nproc) --retry 3"
     end
   end
+  install_module("spec/decidim_dummy_app")
   Rake::Task["prepare_tests"].invoke
 end
 

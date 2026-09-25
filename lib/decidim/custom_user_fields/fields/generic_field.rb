@@ -4,10 +4,9 @@ module Decidim
   module CustomUserFields
     module Fields
       class GenericField
-        extend Forwardable
         include ActionView::Helpers::TagHelper
 
-        def_delegators :@definition, :name, :type, :handler_name
+        delegate :name, :type, :handler_name, to: :definition
 
         attr_reader :definition
         attr_accessor :options
@@ -25,6 +24,11 @@ module Decidim
 
         def skip_hashing?
           options[:skip_hashing].present?
+        end
+
+        # Key used in user.extended_data (overridden by ExtraFieldRefField).
+        def storage_name
+          name
         end
 
         def ui_options
@@ -68,17 +72,17 @@ module Decidim
         end
 
         def label_exists?(label)
-          I18n.exists?(i18n_handler_label(label))
+          ::I18n.exists?(i18n_handler_label(label))
         end
 
         def label(label)
           i18n_identifier = i18n_handler_label(label)
-          unless I18n.exists?(i18n_identifier)
+          unless ::I18n.exists?(i18n_identifier)
             Rails.logger.error("Missing #{i18n_handler_label(label)}")
             return i18n_identifier
           end
 
-          I18n.t(
+          ::I18n.t(
             i18n_identifier,
             default: i18n_identifier
           )
@@ -86,6 +90,29 @@ module Decidim
 
         def required?
           options[:required].present? && options[:required]
+        end
+
+        def apply_form_validations(form, validations)
+          validations = validations.dup
+          if validations.has_key?(:presence)
+            validations.delete(:presence) if validations[:presence] == false
+          elsif required?
+            validations[:presence] = true
+          end
+          return if validations.blank?
+
+          field_name = name
+          validation_options = validations.dup
+          if registration_form?(form)
+            validation_options[:if] = lambda { |record|
+              record.active_custom_field_names.include?(field_name)
+            }
+          end
+          form.validates(name, **validation_options)
+        end
+
+        def registration_form?(form)
+          form.included_modules.include?(Decidim::CustomUserFields::FormDefinition)
         end
 
         def i18n_context

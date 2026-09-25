@@ -42,6 +42,43 @@ describe Decidim::CustomUserFields::Verifications::VerificationForm do
     end
   end
 
+  describe "user attribute casting" do
+    it "does not materialize the full attributes hash during validation" do
+      form = subject
+      allow(form).to receive(:attributes).and_call_original
+
+      expect(form).to be_valid
+      expect(form).not_to have_received(:attributes)
+    end
+
+    it "does not re-instantiate Decidim::User when reading metadata" do
+      form = subject
+      allow(Decidim::User).to receive(:new).and_call_original
+
+      expect { form.metadata }.not_to raise_error
+      expect(Decidim::User).not_to have_received(:new)
+    end
+
+    it "does not re-instantiate Decidim::User when materializing attributes" do
+      form = subject
+      allow(Decidim::User).to receive(:new).and_call_original
+
+      expect { form.attributes }.not_to raise_error
+      expect(form.attributes["user"]).to eq(user)
+      expect(Decidim::User).not_to have_received(:new)
+    end
+
+    it "does not re-instantiate Decidim::User when rendering hidden fields" do
+      form = subject
+      template = ActionView::Base.new(ActionView::LookupContext.new([]), {}, nil)
+      builder = ActionView::Helpers::FormBuilder.new(:authorization, form, template, {})
+      allow(Decidim::User).to receive(:new).and_call_original
+
+      expect { builder.hidden_field(:handler_name) }.not_to raise_error
+      expect(Decidim::User).not_to have_received(:new)
+    end
+  end
+
   describe "validations" do
     describe "when a field must be in a list of allowed values" do
       before do

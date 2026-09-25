@@ -2,6 +2,7 @@
 
 if ENV["SIMPLECOV"]
   SimpleCov.start do
+    minimum_coverage 90
     track_files "**/*.rb"
 
     # We ignore some of the files because they are never tested
@@ -9,7 +10,13 @@ if ENV["SIMPLECOV"]
     add_filter "/db/"
     add_filter "/vendor/"
     add_filter "/spec/"
-    add_filter "/test/"
+    add_filter "/lib/tasks/"
+    # Local OIDC / bootstrap helpers — development-only, not product surface
+    add_filter "/lib/decidim/custom_user_fields/dev/"
+    # i18n rake helpers (invoked via bin/rails i18n:*, not the runtime app)
+    add_filter "/lib/decidim/custom_user_fields/i18n/customization_keys_scanner.rb"
+    add_filter "/lib/decidim/custom_user_fields/i18n/tasks.rb"
+    add_filter "/lib/decidim/custom_user_fields/version.rb"
     add_filter %r{^/decidim-[^/]*/lib/decidim/[^/]*/engine.rb}
     add_filter %r{^/decidim-[^/]*/lib/decidim/[^/]*/admin-engine.rb}
     add_filter %r{^/decidim-[^/]*/lib/decidim/[^/]*/component.rb}

@@ -16,7 +16,7 @@ describe Decidim::CustomUserFields::Fields::TextField do
           (@attributes ||= {})[name] = type
         end
 
-        def validates(name, validations)
+        def validates(name, **validations)
           (@validations ||= {})[name] = validations
         end
       end
@@ -30,7 +30,7 @@ describe Decidim::CustomUserFields::Fields::TextField do
       field.configure_form(form_class)
 
       expect(form_class.attributes).to include(test_field: String)
-      expect(form_class.validations.fetch(:test_field)).to include(presence: false)
+      expect(form_class.validations).to be_nil
     end
 
     context "when required" do
@@ -71,6 +71,19 @@ describe Decidim::CustomUserFields::Fields::TextField do
         expect(format[:with]).to eq(/\A\d+\z/)
         expect(format[:message]).to respond_to(:call)
       end
+    end
+  end
+
+  describe "#validate" do
+    let(:options) { { values_in: %w(a b) } }
+
+    it "adds an error when the value is not allowed" do
+      errors = ActiveModel::Errors.new(Object.new)
+      allow(field).to receive(:label).and_return("bad")
+
+      field.validate("c", {}, errors)
+
+      expect(errors[:test_field]).to be_present
     end
   end
 

@@ -28,39 +28,183 @@ This Decidim module adds custom user fields through a configuration file and wit
 - User registration
 - User profiles
 - User invitations
-
-⚠️ It **does not support**:
-
-- Omniauth registrations
+- Omniauth registration (OIDC profile completion after IdP sign-in)
 
 > Are you on GitHub ? Please use the reference repository on [GitLab for issues and pull requests](https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-user_fields).
 
+All the information to use the gem is on our [documentation website](https://octree-gva.github.io/decidim-user_fields)
 
 ## Install the module
-Add the gem to your Gemfile
+Add the gems to your Gemfile
 ```ruby
 gem "decidim-user_fields"
+gem "decidim-toggle",
+    git: "https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-toggle",
+    branch: "main"
 ```
 
-Run bundle
+Run bundle and install toggle migrations:
 ```bash
 bundle install
+rails decidim_toggle:install:migrations
+rails db:migrate
 ```
 
-## How to add a custom user field.
-Create an initializer `config/initializers/custom_user_fields.rb`
+## Customizations (per organization)
+
+Register named customizations in an initializer. Each customization bundles registration/profile fields and authorization workflows. Sysadmins enable them per organization in **System → Organizations → User field customizations** (via decidim-toggle).
+
 ```ruby
-Decidim::CustomUserFields.configure do |config|
-  config.add_field :birthdate, type: :date, required: true
-  config.add_field :address, type: :textarea, required: false, rows: 10
-  config.add_field :purpose, type: :text, required: false
+Decidim::CustomUserFields.register_customization :community do |customization|
+  customization.registration_fields do |set|
+    set.add_field :social_media_url, type: :text, required: false
+  end
+end
+
+Decidim::CustomUserFields.register_customization :ngos do |customization|
+  customization.registration_fields do |set|
+    set.add_field :organization_name, type: :text, required: true
+    set.add_field :organization_email, type: :text, required: true
+  end
+
+  customization.authorization "NgoVerify" do |config|
+    config.add_field :organization_name, type: :extra_field_ref, ref: :organization_name, required: true
+  end
+end
+```
+
+Admin toggle radio labels: `decidim_toggle.system.custom_user_fields.<name>_enabled`. The none option uses `decidim_toggle.system.custom_user_fields.none`.
+Customization display labels (`Customization#label`): `decidim.custom_user_fields.customizations.<name>`.
+
+Full key list and how to run `i18n-tasks missing` (customization registry scanner): see the [Translate](https://octree-gva.github.io/decidim-user_fields/dev_documentation/locales) docs page.
+
+Sysadmins enable at most one customization per organization (radio). Bundled authorization workflows appear under **System → Authorizations** only while that customization is enabled; switching or choosing none also unselects those handlers.
+
+## Upgrading from field sets to customizations
+
+User values in `extended_data` and existing authorization grants are unchanged when field and handler names stay the same.
+
+Toggle config migrates from `{ "active_field_set": "default" }` to `{ "enabled_customization": "default" }`.
+
+On deploy, `bin/rails decidim:upgrade` (or `decidim:update`) runs `decidim_custom_user_fields:upgrade:migrate_toggle_config` automatically.
+
+Until that runs, the module still reads `active_field_set` and legacy `{name}_enabled` flags when `enabled_customization` is absent.
+
+Manual run:
+
+```bash
+bin/rails decidim_custom_user_fields:upgrade:migrate_toggle_config
+DRY_RUN=1 bin/rails decidim_custom_user_fields:upgrade:migrate_toggle_config
+```
+
+Refactor your initializer from `register_field_set` to `register_customization`, keeping the same customization name as the former field set (e.g. `:default`). Unknown or removed DSL calls (`custom_fields`, `register_field_set`, `configure { add_field }`, typos) raise `Decidim::CustomUserFields::Error` with a migration or DidYouMean hint.
+
+## Try Omniauth locally (Zitadel + Docker)
+
+Local review of this gem (clone this repo). Integrators adding the gem to an existing Decidim app: see **Install the module** above.
+
+**Prerequisite:** Docker and Docker Compose.
+
+### Quick start
+
+1. Clone this repository.
+2. `./bin/dev-oidc-up`
+3. Wait (~5–10 min the first time).
+4. Open http://localhost:3000.
+
+Unlike `spam_signal` / `voca`, default `docker compose up` does **not** start a Decidim process; do not use `docker compose up -d decidim` for first success.
+
+Idempotent: safe to re-run when the stack is already up.
+
+### What `./bin/dev-oidc-up` does
+
+| Step | Action | Output |
+|------|--------|--------|
+| 1 | Start Zitadel stack | Zitadel on :8080, admin PAT in `docker/zitadel/bootstrap/admin.pat` |
+| 2 | Configure Zitadel SMTP + OIDC app | `docker/zitadel/oidc.env` (gitignored) |
+| 3 | `rake test_app` (first time only) | Dummy app in `spec/decidim_dummy_app` |
+| 4 | `dev:prepare_secrets`, `db:drop db:create db:migrate` | Empty Decidim schema |
+| 5 | `dev:seed` | Minimal org + admin + Zitadel provider + **association** scenario |
+| 6 | `docker compose --profile dev run --rm --service-ports decidim … rails s` | Rails on http://localhost:3000 (foreground) |
+
+### URLs and credentials
+
+| URL | Purpose |
+|-----|---------|
+| http://localhost:3000 | Decidim dummy app |
+| http://localhost:8080 | Zitadel console |
+| http://localhost:1080 | MailCatcher (emails) |
+
+| Account | Login |
+|---------|-------|
+| Decidim admin | `admin@example.org` / `decidim123456789` |
+| Zitadel admin | `admin@zitadel.localhost` / `Password1!` |
+
+### Experiment: OIDC sign-in → custom fields
+
+1. Open http://localhost:8080, sign in as Zitadel admin.
+2. **Users → New** — create a test user (email + password).
+3. Open http://localhost:3000/users/sign_in, click **Zitadel**, sign in with that user.
+4. Complete the profile form — the association demo shows the “I represent an association” checkbox.
+5. Optional: verify authorization at http://localhost:3000/account/authorizations/new?handler=association_only (after checking the boolean on registration).
+
+Change the seeded scenario (e.g. optional birthdate + age authorizations):
+
+```bash
+DEV_CUSTOMIZATION=birthdate_age_gates ./bin/dev-oidc-up
+```
+
+### Environment variables (local OIDC)
+
+| Variable | Default | Required | Purpose |
+|----------|---------|----------|---------|
+| `DEV_CUSTOMIZATION` | `association` | no | Scenario customization enabled by `dev:seed` (`association`, `birthdate_age_gates`, `location_validation`) |
+| `DECIDIM_HOST` | `localhost` | no | Organization host matched by `dev:seed` |
+| `ZITADEL_OIDC_ENABLED` | set in compose | no | Loads dev OIDC middleware + scenario customizations |
+| `ZITADEL_URL` | `http://localhost:8080` | no | Zitadel API base URL used by `dev-oidc-up` |
+| `OIDC_ISSUER` | `http://localhost:8080` | no | Public issuer written to `oidc.env` |
+| `OIDC_REDIRECT_URI` | `http://localhost:3000/users/auth/openid_connect/callback` | no | OIDC redirect URI for the Zitadel app |
+
+Generated at setup time (do not commit): `docker/zitadel/oidc.env` — see `docker/zitadel/oidc.env.example`.
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| No **Zitadel** button on sign-in | Re-run `./bin/dev-oidc-up` |
+| `Missing docker/zitadel/oidc.env` | Re-run `./bin/dev-oidc-up` (Zitadel must be ready first) |
+| `Missing PAT at docker/zitadel/bootstrap/admin.pat` | `docker compose down -v` then `./bin/dev-oidc-up` |
+| Zitadel not ready yet | Wait 1–2 min on first boot; check http://localhost:8080/debug/ready |
+| `connection refused` to `localhost:8080` on Zitadel login | Re-run `./bin/dev-oidc-up` — token/userinfo must use `zitadel:8080` inside Docker |
+| Zitadel login fails with `"Unknown"` / `Instance not found` | Ensure `ZITADEL_PUBLIC_HOST=localhost:8080` on the Decidim container (Host header for internal calls) |
+| OIDC completes custom fields but asks for email confirmation | Re-run `./bin/dev-oidc-up` after updating the gem — OpenID Connect verified emails should sign you in directly |
+| Port 3000 empty | Do not use plain `docker compose up` or `docker compose up -d decidim` — use `./bin/dev-oidc-up` |
+| `cd: spec/decidim_dummy_app: No such file or directory` (or missing `config/application.rb`) | Optional `docker compose down -v`, then `./bin/dev-oidc-up` (script runs `rake test_app` before any dummy `cd`) |
+| `network … not found` when starting Rails | Stale compose network after one-shots — re-run `./bin/dev-oidc-up` (script no longer uses `profile web up`) |
+| `decidim_users already exists` on setup | Re-run `docker compose down -v && ./bin/dev-oidc-up` (script runs `db:drop db:create db:migrate`) |
+| `A server is already running` / stale `server.pid` | `rm -f spec/decidim_dummy_app/tmp/pids/server.pid` then re-run `./bin/dev-oidc-up` |
+
+Reset all local data: `docker compose down -v` then `./bin/dev-oidc-up`.
+
+## How to add a custom user field
+
+Create an initializer `config/initializers/custom_user_fields.rb`:
+
+```ruby
+Decidim::CustomUserFields.register_customization :default do |customization|
+  customization.registration_fields do |set|
+    set.add_field :birthdate, type: :date, required: true
+    set.add_field :address, type: :textarea, required: false, rows: 10
+    set.add_field :purpose, type: :text, required: false
+  end
 end
 ```
 ## Renewable verifications
-To set an authorization as renewable, you can use `renewable!(time_between_renew)`:
+To set an authorization as renewable, register it inside a customization and use `renewable!(time_between_renew)`:
 ```
-Rails.application.config.after_initialize  do
-  Decidim::CustomUserFields::Verifications.register("PB2024") do |config|
+Decidim::CustomUserFields.register_customization :pb2024 do |customization|
+  customization.registration_fields { |set| set.add_field :foo, type: :text }
+  customization.authorization "PB2024" do |config|
     config.renewable!(2.days) # Will need to renew authorization after 2 days.
   end
 end
@@ -70,10 +214,11 @@ This will have no effect under < 30, or without the `decidim-ephemerable` gem.
 
 
 ## Ephemerable verifications
-To set an authorization as ephemerable, you can use `ephemerable!`:
+To set an authorization as ephemerable, register it inside a customization and use `ephemerable!`:
 ```
-Rails.application.config.after_initialize  do
-  Decidim::CustomUserFields::Verifications.register("PB2024") do |config|
+Decidim::CustomUserFields.register_customization :pb2024 do |customization|
+  customization.registration_fields { |set| set.add_field :foo, type: :text }
+  customization.authorization "PB2024" do |config|
     config.ephemerable!
     config.renewable!(1.day) # The ephemerable will be valid for a day
   end
@@ -152,15 +297,13 @@ fr:
 # Create an authorization with custom fields
 
 ```ruby
-# Fields added to the profile
-Decidim::CustomUserFields.configure do |config|
-  config.add_field :first_name, type: :text, required: false
-  config.add_field :last_name, type: :text, required: false
-end
+Decidim::CustomUserFields.register_customization :pb2024 do |customization|
+  customization.registration_fields do |set|
+    set.add_field :first_name, type: :text, required: false
+    set.add_field :last_name, type: :text, required: false
+  end
 
-# Fields for the verification PB2024
-Rails.application.config.after_initialize  do
-  Decidim::CustomUserFields::Verifications.register("PB2024") do |config|
+  customization.authorization "PB2024" do |config|
     config.ephemerable!
     config.add_field :first_name, type: :extra_field_ref, required: true, skip_hashing: true, hide_if_value: true
     config.add_field :last_name, type: :extra_field_ref, required: true, skip_hashing: true, hide_if_value: true
@@ -168,7 +311,6 @@ Rails.application.config.after_initialize  do
     config.add_field :postal_code, type: :text, required: true, format: /\A[\-0-9]*\z/, values_in: ["2000", "2001", "2002"]
   end
 end
-
 ```
 
 Then, add locales for this flow: 
@@ -195,55 +337,50 @@ fr:
         help_text: Seul les communies prêt de maCommune peux être acceptée
 ```
 
-# Run locally
-To run this module locally, we use Docker-compose:
+## Module development (specs, shell)
+
+For **OIDC experimentation**, use [Try Omniauth locally](#try-omniauth-locally-zitadel--docker) above.
+
+The `decidim` compose service is the OIDC/dev container (shell or Rails). `./bin/dev-oidc-up` starts Rails with `compose run --service-ports`.
 
 ```bash
-docker-compose up
-```
-This will run a decidim-user_fields container, which **sleeps and does nothing**.
+# Interactive shell in the dev container
+docker compose --profile dev run --rm decidim bash
 
-After your containers are mounted, you can seed the database: 
+# CI-shaped specs (default Gemfile, no ephemeral gem)
+docker compose -f docker-compose.ci.yml run --rm rspec
+
+# Same specs with decidim-ephemeral_participation (Appraisal `with_ephemeral`)
+docker compose -f docker-compose.ci.yml run --rm -e BUNDLE_GEMFILE=/app/gemfiles/with_ephemeral.gemfile rspec
+```
+
+### Advanced — dummy already generated
+
+Use these only after `spec/decidim_dummy_app/config/application.rb` exists (`./bin/dev-oidc-up` or `rake test_app`).
+
 ```bash
-  docker-compose exec -it decidim-user_fields bin/rails db:seed
+# Rails only (infra must already be up — e.g. after a partial setup)
+docker compose --profile dev run --rm --service-ports decidim bash -c \
+  "cd /home/module/spec/decidim_dummy_app && rm -f tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0 -p 3000"
+
+# Specs (from repo root, dummy app Gemfile)
+docker compose --profile dev run --rm decidim bash -c \
+  "cd /home/module && BUNDLE_GEMFILE=spec/decidim_dummy_app/Gemfile bundle exec rspec"
 ```
 
-Then, you can start the server
-```bash
-  docker-compose exec -it decidim-user_fields bin/rails s -b 0.0.0.0
-```
+Regenerate the dummy app when switching `BUNDLE_GEMFILE` (`rake test_app` in that bundle). Default CI has no ephemeral gem; `ruby::rspec-ephemeral` installs `decidim-ephemeral_participation` `v0.0.9`.
 
-You can then open a bash session and edit the initializer, as described in the "How to add a custom user field" section. 
-```bash
-  docker-compose exec -it decidim-user_fields bash
-```
+Useful paths inside the container:
 
-Once something change, reset your server: 
-```bash
-  docker-compose exec -it decidim-user_fields bin/rails restart
-```
-While developing locally, you have two environment variables that can help you:
+| Path | Purpose |
+|------|---------|
+| `/home/module` | This gem (mounted from the repo) |
+| `/home/module/spec/decidim_dummy_app` | Dummy Decidim app used for local OIDC + specs |
 
-* `ROOT`: the root of the application using the module
-* `MODULE_ROOT`: the place where your gem code is.
+Environment variables in the dev image:
 
-
-
-### Usefull commands
-
-| Command                                                                                          | Description                                         |
-|--------------------------------------------------------------------------------------------------|-----------------------------------------------------|
-| `docker-compose exec -it decidim-user_fields bundle exec rails db:seed`                          | Seed the database (run on localhost:3000)           |
-| `docker-compose exec -it decidim-user_fields bin/webpack-dev-server`                             | Compile assets and watch for changes                |
-| `docker-compose exec -it decidim-user_fields bin/rails s -b 0.0.0.0`                             | Run the Rails server in development                 |
-| `docker-compose exec -it decidim-user_fields bundle exec rspec /home/decidim/module/spec`        | Run tests for the module                            |
-| `docker-compose exec -it decidim-user_fields bundle exec rubocop -a /home/decidim/module`        | Correct lint errors with RuboCop                    |
-| `docker-compose exec -it decidim-user_fields bash`                                               | Navigate your container in bash                     |
-
-
-
-
-While developing locally, you have two environment variables that can help you:
-
-* `ROOT`: the root of the application using the module
-* `MODULE_ROOT`: the place where your gem code is.
+| Variable | Purpose |
+|----------|---------|
+| `DEV_MODULE` | Gem under development (`decidim-user_fields`) |
+| `DECIDIM_VERSION` | Decidim release used by the dummy app |
+| `BUNDLE_GEMFILE` | Bundler gemfile. Empty uses `./Gemfile` (no ephemeral). `gemfiles/with_ephemeral.gemfile` adds `decidim-ephemeral_participation`. |

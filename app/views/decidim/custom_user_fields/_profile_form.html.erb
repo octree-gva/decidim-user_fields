@@ -1,5 +1,5 @@
 <div class="decidim_custom_user_fields__section decidim_custom_user_fields__section--profile">
-    <% Decidim::CustomUserFields.custom_fields.collect do |field|
+    <% Decidim::CustomUserFields::RegistrationFields.active_registration_fields(f.object.current_organization).each do |field|
         concat field.form_tag(f)
     end %>
 </div>

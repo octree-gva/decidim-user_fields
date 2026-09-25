@@ -1,0 +1,50 @@
+# frozen_string_literal: true
+
+# Hand-maintained appraisal gemfile. Keep in sync with Appraisals (with_ephemeral)
+# and the root Gemfile.
+
+source "https://rubygems.org"
+
+engine_root = File.expand_path("..", __dir__)
+require_relative File.join(engine_root, "lib/decidim/custom_user_fields/version")
+
+DECIDIM_VERSION = "~> 0.29.7"
+
+gem "decidim", DECIDIM_VERSION
+gem "decidim-user_fields", path: engine_root
+
+gem "decidim-toggle",
+    git: "https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-toggle",
+    branch: "main"
+
+gem "decidim-ephemeral_participation",
+    git: "https://git.octree.ch/decidim/vocacity/decidim-modules/decidim-ephemeral_participation",
+    tag: "v0.0.9"
+
+gem "bootsnap", "~> 1.18"
+gem "deface", ">= 1.9"
+gem "omniauth_openid_connect", "~> 0.8.0"
+gem "puma", ">= 6.6"
+gem "uglifier", "~> 4.2"
+
+group :development, :test do
+  gem "appraisal", "~> 2.5", require: false
+  gem "byebug", "~> 11.1", platform: :mri
+  gem "decidim-dev", DECIDIM_VERSION
+end
+
+group :test do
+  gem "capybara", "~> 3.40"
+  # simplecov-cobertura 2.1.0 parses a doctype-only head. rexml >= 3.4.2 rejects it.
+  gem "rexml", "3.4.1"
+  gem "rspec-rails", "~> 6.0"
+  gem "rubocop-faker"
+  gem "selenium-webdriver"
+end
+
+group :development do
+  gem "faker", "~> 3.5"
+  gem "letter_opener_web", "~> 3.0"
+  gem "listen", "~> 3.9"
+  gem "web-console", "~> 4.2"
+end

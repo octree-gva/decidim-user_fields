@@ -36,4 +36,10 @@ describe Decidim::CustomUserFields::FieldDefinition do
       described_class.new(:test, { type: :nope }, handler_name)
     end.to raise_error(Decidim::CustomUserFields::Error, /not supported/)
   end
+
+  it "suggests a nearby type for typos" do
+    expect do
+      described_class.new(:test, { type: :tex }, handler_name)
+    end.to raise_error(Decidim::CustomUserFields::Error, /Did you mean\? text/)
+  end
 end

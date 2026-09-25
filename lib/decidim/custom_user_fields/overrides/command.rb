@@ -24,7 +24,6 @@ module Decidim
           locale: form.current_locale,
           extended_data:
         }
-        user_payload.email_on_notification = Decidim::CustomUserFields.default_email_on_notification if Decidim.version < "0.27"
         @user = User.create!(user_payload)
       end
 
@@ -39,11 +38,13 @@ module Decidim
       end
 
       def extended_data
+        org = @form.try(:current_organization)
         custom_data = {}
-        Decidim::CustomUserFields.custom_fields.each do |field_def|
+        RegistrationFields.active_registration_fields(org).each do |field_def|
           custom_data[field_def.name] = @form[field_def.name]
         end
-        @extended_data ||= (@user&.extended_data || {}).merge(custom_data)
+        source_user = try(:current_user) || @user
+        @extended_data ||= (source_user&.extended_data || {}).merge(custom_data)
       end
     end
   end

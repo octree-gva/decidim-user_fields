@@ -22,7 +22,8 @@ module Decidim
                      :i18n_context=,
                      :validate,
                      :skip_hashing?,
-                     :sanitized_value
+                     :sanitized_value,
+                     :storage_name
 
       def initialize(name, kwargs, handler_name)
         @handler_name = handler_name
@@ -39,9 +40,16 @@ module Decidim
           @field = Fields::DateField.new(self, kwargs)
         when :extra_field_ref
           @field = Fields::ExtraFieldRefField.new(self, kwargs)
+        when :boolean
+          @field = Fields::BooleanField.new(self, kwargs)
         else
-          raise Error, "field type #{type} is not supported"
+          raise Error, DefinitionGuidance.unsupported_type_message(type)
         end
+      end
+
+      def deep_dup
+        opts = field.options.except(:type, "type").merge(type:)
+        self.class.new(name, opts, handler_name)
       end
     end
   end

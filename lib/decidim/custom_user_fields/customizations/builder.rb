@@ -1,0 +1,48 @@
+# frozen_string_literal: true
+
+module Decidim
+  module CustomUserFields
+    module Customizations
+      class Builder
+        include DefinitionMissing
+
+        DSL_METHODS = [:registration_fields, :authorization].freeze
+
+        def initialize(customization)
+          @customization = customization
+        end
+
+        def registration_fields(&)
+          field_builder = RegistrationFieldsBuilder.new(@customization)
+          yield field_builder
+        end
+
+        def authorization(name, &)
+          Decidim::CustomUserFields::Verifications.register(name, customization: @customization.name, &)
+        end
+      end
+
+      class RegistrationFieldsBuilder
+        include DefinitionMissing
+
+        DSL_METHODS = [:add_field].freeze
+
+        def initialize(customization)
+          @customization = customization
+        end
+
+        def add_field(field_name, field_definition)
+          if RegistrationFields.reserved_key?(field_name.to_s.to_sym)
+            raise Decidim::CustomUserFields::Error,
+                  "Field name #{field_name} is reserved by decidim-core extended_data"
+          end
+          field_name = CustomizationFieldNaming.prefixed(@customization.name, field_name)
+
+          @customization.fields.push(
+            FieldDefinition.new(field_name, field_definition, "extended_data")
+          )
+        end
+      end
+    end
+  end
+end

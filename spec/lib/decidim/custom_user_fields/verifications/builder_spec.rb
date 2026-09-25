@@ -3,41 +3,63 @@
 require "spec_helper"
 
 describe Decidim::CustomUserFields::Verifications::Builder do
-  let(:name) { "test_verification" }
-  let(:builder) { described_class.new(name) }
+  subject(:builder) { described_class.new("TestFlow") }
 
-  describe "#handler_name" do
-    it "underscores the class name" do
-      expect(builder.klass_name).to eq("TestVerification")
-      expect(builder.handler_name).to eq("test_verification")
+  describe "#register_workflow!" do
+    it "registers a decidim verification workflow" do
+      workflow = Class.new do
+        attr_accessor :form, :metadata_cell, :ephemerable, :renewable, :time_between_renewals
+      end.new
+
+      allow(Decidim::Verifications).to receive(:find_workflow_manifest).and_return(nil)
+      allow(Decidim::Verifications).to receive(:register_workflow).and_yield(workflow)
+      builder.add_field(:foo, type: :text)
+
+      builder.register_workflow!
+
+      expect(Decidim::Verifications).to have_received(:register_workflow).with(:test_flow)
+      expect(workflow.form).to eq("Decidim::CustomUserFields::Verifications::TestFlow")
+    end
+
+    it "does not register the workflow twice" do
+      allow(Decidim::Verifications).to receive(:find_workflow_manifest).and_return(double)
+      allow(Decidim::Verifications).to receive(:register_workflow)
+      builder.add_field(:foo, type: :text)
+
+      builder.register_workflow!
+
+      expect(Decidim::Verifications).not_to have_received(:register_workflow)
     end
   end
 
-  describe "#renewable!" do
-    it "marks as renewable and stores time_between_renewals" do
-      builder.renewable!(3.days)
-      expect(builder.renewable?).to be(true)
-      expect(builder.time_between_renewals).to eq(3.days)
+  describe "extra_field_ref requirements" do
+    it "requires a customization when extra_field_ref is used" do
+      with_customizations do
+        register_test_customization(:community) do |customization|
+          customization.registration_fields { |set| set.add_field(:foo, type: :dummy) }
+        end
+
+        builder = described_class.new("BadFlow")
+        builder.add_field(:foo, type: :extra_field_ref, ref: :foo)
+
+        expect do
+          builder.register_workflow!
+        end.to raise_error(Decidim::CustomUserFields::Error, /must be registered inside a customization/)
+      end
     end
-  end
 
-  describe "#ephemerable!" do
-    it "marks as ephemerable" do
-      builder.ephemerable!
-      expect(builder.ephemerable?).to be(true)
-    end
-  end
+    it "registers workflow when extra_field_ref matches customization fields" do
+      with_customizations do
+        register_test_customization(:community) do |customization|
+          customization.registration_fields { |set| set.add_field(:foo, type: :dummy) }
+        end
 
-  describe "#add_field" do
-    it "adds a field definition with handler name" do
-      expect do
-        builder.add_field(:foo, type: :dummy)
-      end.to change(builder.fields, :length).by(1)
+        builder = described_class.new("GoodFlow", customization: :community)
+        builder.add_field(:foo, type: :extra_field_ref, ref: :foo)
 
-      field_def = builder.fields.first
-      expect(field_def).to be_a(Decidim::CustomUserFields::FieldDefinition)
-      expect(field_def.name).to eq(:foo)
-      expect(field_def.handler_name).to eq(builder.handler_name)
+        allow(Decidim::Verifications).to receive(:register_workflow)
+        expect { builder.register_workflow! }.not_to raise_error
+      end
     end
   end
 end

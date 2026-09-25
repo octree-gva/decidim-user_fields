@@ -28,7 +28,7 @@ module Decidim
             validations[:length] = min_max_options
             validations[:allow_blank] = !required?
           end
-          form.validates(name, validations)
+          apply_form_validations(form, validations)
         end
 
         def sanitized_value(value)

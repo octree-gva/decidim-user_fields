@@ -1,7 +1,10 @@
 .DS_Store
 vendor
+gemfiles/vendor
 node_modules
 .env
+docker/zitadel/oidc.env
+docker/zitadel/bootstrap/admin.pat
 coverage
 spec/decidim_dummy_app
 .byebug_history

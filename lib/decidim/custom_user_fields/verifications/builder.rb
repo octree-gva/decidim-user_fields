@@ -4,11 +4,23 @@ module Decidim
   module CustomUserFields
     module Verifications
       class Builder
-        attr_reader :name
+        include DefinitionMissing
+
+        DSL_METHODS = [
+          :add_field,
+          :renewable!,
+          :renewable?,
+          :ephemerable!,
+          :ephemerable?,
+          :register_workflow!
+        ].freeze
+
+        attr_reader :name, :customization
         attr_accessor :fields, :renewable, :time_between_renewals
 
-        def initialize(name)
+        def initialize(name, customization: nil)
           @name = name.to_s
+          @customization = customization&.to_sym
           @fields = []
           @ephemerable = false
           @renewable = false
@@ -25,7 +37,9 @@ module Decidim
         end
 
         def add_field(field_name, field_definition)
-          fields.push(FieldDefinition.new(field_name, field_definition, handler_name))
+          field_def = FieldDefinition.new(field_name, field_definition, handler_name)
+          field_def.field.customization_name = @customization if field_def.type == :extra_field_ref
+          fields.push(field_def)
         end
 
         def ephemerable!
@@ -45,6 +59,9 @@ module Decidim
         end
 
         def register_workflow!
+          validate_extra_field_ref_requirements!
+          return if workflow_already_registered?
+
           Decidim::Verifications.register_workflow(handler_name.to_sym) do |workflow|
             workflow.form = "Decidim::CustomUserFields::Verifications::#{klass_name}"
             klass = Decidim::CustomUserFields::Verifications.create_verification_class(klass_name)
@@ -57,6 +74,24 @@ module Decidim
             fields.map do |field|
               field.configure_form(klass)
             end
+          end
+        end
+
+        private
+
+        def workflow_already_registered?
+          Decidim::Verifications.find_workflow_manifest(handler_name).present?
+        end
+
+        def validate_extra_field_ref_requirements!
+          uses_extra_field_ref = fields.any? { |field| field.type == :extra_field_ref }
+          if uses_extra_field_ref && customization.nil?
+            raise Decidim::CustomUserFields::Error,
+                  "authorization #{name} must be registered inside a customization when using extra_field_ref fields"
+          end
+
+          fields.each do |field|
+            field.field.validate_customization_reference! if field.type == :extra_field_ref
           end
         end
       end

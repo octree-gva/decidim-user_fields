@@ -23,7 +23,8 @@ module Decidim
                      :validate,
                      :skip_hashing?,
                      :sanitized_value,
-                     :storage_name
+                     :storage_name,
+                     :required?
 
       def initialize(name, kwargs, handler_name)
         @handler_name = handler_name

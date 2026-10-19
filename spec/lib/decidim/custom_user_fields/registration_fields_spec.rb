@@ -137,4 +137,47 @@ describe Decidim::CustomUserFields::RegistrationFields do
       expect(described_class.prompt_authorization_on_first_login?(organization)).to be(false)
     end
   end
+
+  describe ".missing_required" do
+    let(:user) { create(:user, :confirmed, organization:, extended_data: {}) }
+
+    it "lists only blank required fields for the organization" do
+      with_customizations do
+        register_test_customization(:community) do |customization|
+          customization.registration_fields do |set|
+            set.add_field(:first_name, type: :text, required: true)
+            set.add_field(:alias, type: :text, required: false)
+          end
+        end
+        enable_customization_for(organization, :community)
+
+        expect(described_class.missing_required(user).map(&:name)).to eq([:community_first_name])
+
+        user.update!(extended_data: { "community_first_name" => "Ada" })
+        expect(described_class.missing_required(user)).to eq([])
+      end
+    end
+
+    it "treats whitespace-only values as blank" do
+      with_customizations do
+        register_test_customization(:community) do |customization|
+          customization.registration_fields do |set|
+            set.add_field(:first_name, type: :text, required: true)
+          end
+        end
+        enable_customization_for(organization, :community)
+        user.update!(extended_data: { "community_first_name" => "  " })
+
+        expect(described_class.missing_required(user).map(&:name)).to eq([:community_first_name])
+      end
+    end
+  end
+
+  describe ".completion_path" do
+    it "points at the account complete profile route" do
+      expect(described_class.completion_path).to eq(
+        Decidim::Core::Engine.routes.url_helpers.account_complete_profile_path
+      )
+    end
+  end
 end

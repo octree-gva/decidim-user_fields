@@ -30,6 +30,7 @@ services:
       - .:/app
     shm_size: "2gb"
     environment:
+      ENGINE_ROOT: /app
       DATABASE_HOST: postgres
       DATABASE_PORT: "5432"
       DATABASE_PASSWORD: "TEST-insecure_password"

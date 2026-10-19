@@ -54,7 +54,25 @@ module Decidim
           Customizations.all.flat_map(&:fields).uniq(&:name)
         end
 
+        def missing_required(user)
+          return [] if user.blank? || user.organization.blank?
+
+          active_registration_fields(user.organization).select do |field|
+            field.required? && blank_stored?(user, field)
+          end
+        end
+
+        def completion_path
+          Decidim::Core::Engine.routes.url_helpers.account_complete_profile_path
+        end
+
         private
+
+        def blank_stored?(user, field)
+          value = (user.extended_data || {})[field.name.to_s]
+          value = value.strip if value.is_a?(String)
+          value.blank?
+        end
 
         def raw_toggle_config(organization)
           Decidim::Toggle::OrganizationModuleConfig.find_by(

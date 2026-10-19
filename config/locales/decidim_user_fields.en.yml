@@ -1,6 +1,11 @@
 en:
   decidim:
     custom_user_fields:
+      profile_completion:
+        title: "Complete your profile"
+        subtitle: "Please fill in these details to continue."
+        submit: "Complete profile"
+        success: "Your profile has been updated."
       system:
         customizations_tab: "User fields"
         first_login_mode:

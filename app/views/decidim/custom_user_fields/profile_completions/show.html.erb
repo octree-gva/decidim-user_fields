@@ -1,0 +1,30 @@
+<%= render layout: "layouts/decidim/shared/layout_center" do %>
+  <div class="flex justify-center">
+    <h1 class="title-decorator my-12"><%= t("decidim.custom_user_fields.profile_completion.title") %></h1>
+  </div>
+
+  <div class="text-lg text-gray-2">
+    <p>
+      <%= t("decidim.custom_user_fields.profile_completion.subtitle") %>
+    </p>
+  </div>
+
+  <div class="login__info-required">
+    <%= form_required_explanation %>
+  </div>
+
+  <%= decidim_form_for(@form, url: decidim.account_complete_profile_path, method: :put, html: { id: "profile-completion-form" }) do |f| %>
+    <div class="form__wrapper">
+      <% missing_fields.each do |field| %>
+        <%= field.form_tag(f) %>
+      <% end %>
+    </div>
+
+    <div class="form__wrapper-block">
+      <button type="submit" class="button button__lg button__secondary">
+        <span><%= t("decidim.custom_user_fields.profile_completion.submit") %></span>
+        <%= icon "arrow-right-line", class: "fill-current" %>
+      </button>
+    </div>
+  <% end %>
+<% end %>

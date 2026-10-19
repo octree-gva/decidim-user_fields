@@ -10,9 +10,15 @@ module Decidim
     class Engine < ::Rails::Engine
       isolate_namespace Decidim::CustomUserFields
       routes do
-        # Add engine routes here
-        # resources :custom_user_fields
-        # root to: "custom_user_fields#index"
+        Decidim::Core::Engine.routes.draw do
+          get "/account/complete_profile",
+              to: "/decidim/custom_user_fields/profile_completions#show",
+              as: :account_complete_profile
+          put "/account/complete_profile",
+              to: "/decidim/custom_user_fields/profile_completions#update"
+          patch "/account/complete_profile",
+                to: "/decidim/custom_user_fields/profile_completions#update"
+        end
       end
 
       initializer "decidim_custom_user_fields.registration_additions" do

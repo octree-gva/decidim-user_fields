@@ -17,7 +17,8 @@ module Decidim
           [
             Decidim::RegistrationForm,
             Decidim::OmniauthRegistrationForm,
-            Decidim::AccountForm
+            Decidim::AccountForm,
+            ProfileCompletionForm
           ].each { |form_class| FormDefinition.setup_form_class(form_class) }
         end
 

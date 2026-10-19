@@ -16,6 +16,7 @@ module Decidim
 
         include_form(Decidim::OmniauthRegistrationForm)
         include_form(Decidim::AccountForm)
+        include_form(ProfileCompletionForm)
         prepend_to(Decidim::CreateRegistration, Command)
         prepend_to(Decidim::CreateOmniauthRegistration, OmniauthCommand)
         prepend_to(Decidim::Devise::OmniauthRegistrationsController, OmniauthRegistrationsController)

@@ -1,6 +1,11 @@
 fr:
   decidim:
     custom_user_fields:
+      profile_completion:
+        title: "Complétez votre profil"
+        subtitle: "Veuillez renseigner ces informations pour continuer."
+        submit: "Compléter le profil"
+        success: "Votre profil a été mis à jour."
       system:
         customizations_tab: "Champs utilisateur"
         first_login_mode:

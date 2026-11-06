@@ -8,9 +8,10 @@ base_path = "../" if File.basename(__dir__) == "development_app"
 
 require_relative "#{base_path}lib/decidim/custom_user_fields/version"
 
-DECIDIM_VERSION = "~> 0.29.7"
+DECIDIM_VERSION = ">= 0.32.1"
 
 gem "decidim", DECIDIM_VERSION
+gem "activerecord", ">= 7.1"
 gem "decidim-user_fields", path: base_path
 
 gem "decidim-toggle",
@@ -22,6 +23,7 @@ gem "deface", ">= 1.9"
 gem "omniauth_openid_connect", "~> 0.8.0"
 gem "puma", ">= 6.6"
 gem "uglifier", "~> 4.2"
+# gem "rack-protection", "~> 3.1.0"
 
 group :development, :test do
   gem "appraisal", "~> 2.5", require: false

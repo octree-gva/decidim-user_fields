@@ -45,7 +45,13 @@ module Decidim
           def customization_radio_options
             Customizations.all.map do |customization|
               name = customization.name.to_s
-              [name, ::I18n.t("#{name}_enabled", scope: "decidim_toggle.system.custom_user_fields")]
+              # Handle customisations with no "#{name}_enabled" (e.g. scenarios defined outside this module)
+              label = ::I18n.t(
+                "#{name}_enabled",
+                scope: "decidim_toggle.system.custom_user_fields",
+                default: name.to_s.humanize
+              )
+              [name, label]
             end
           end
         end

@@ -256,10 +256,11 @@ docker compose --profile dev run --rm decidim bash -c "
 "
 generate_dummy_app_if_needed
 
-echo '==> [4/5] Preparing database + openid_connect secrets...'
+echo "==> [4/5] Preparing database + openid_connect omniauth initializer..."
 docker compose --profile dev run --rm decidim bash -c "
+  apt install -y libclang-dev
   cd /home/module/spec/decidim_dummy_app &&
-  bundle exec rake decidim_custom_user_fields:dev:prepare_secrets &&
+  bundle exec rake decidim_custom_user_fields:dev:prepare_omniauth &&
   bundle check || bundle install
 "
 

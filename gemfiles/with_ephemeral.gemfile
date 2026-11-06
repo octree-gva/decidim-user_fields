@@ -8,7 +8,7 @@ source "https://rubygems.org"
 engine_root = File.expand_path("..", __dir__)
 require_relative File.join(engine_root, "lib/decidim/custom_user_fields/version")
 
-DECIDIM_VERSION = "~> 0.29.7"
+DECIDIM_VERSION = ">= 0.32.1"
 
 gem "decidim", DECIDIM_VERSION
 gem "decidim-user_fields", path: engine_root

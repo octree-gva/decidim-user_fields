@@ -25,6 +25,7 @@ require "decidim/custom_user_fields/overrides/omniauth_registrations_controller"
 require "decidim/custom_user_fields/overrides/invitations_controller"
 require "decidim/custom_user_fields/overrides/authorizations_controller"
 require "decidim/custom_user_fields/overrides/form_definition"
+require "decidim/custom_user_fields/overrides/user"
 require "decidim/custom_user_fields/decidim_integrations"
 
 require "decidim/custom_user_fields/engine"
@@ -32,7 +33,7 @@ require "decidim/custom_user_fields/update_customizations_config_command"
 
 if defined?(Rails) && (Rails.env.development? || ENV["ZITADEL_OIDC_ENABLED"].present?)
   require "decidim/custom_user_fields/dev/scenario_customizations"
-  require "decidim/custom_user_fields/dev/secrets_patcher"
+  require "decidim/custom_user_fields/dev/omniauth_providers_patcher"
   require "decidim/custom_user_fields/dev/bootstrap"
   require "decidim/custom_user_fields/dev/local_oidc_seeder"
   require "decidim/custom_user_fields/dev/openid_connect_setup"

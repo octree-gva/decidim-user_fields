@@ -22,6 +22,7 @@ module Decidim
         prepend_to(Decidim::UpdateAccount, Command)
         prepend_to(Decidim::Devise::InvitationsController, InvitationAcceptExtendedData)
         prepend_to(Decidim::Verifications::AuthorizationsController, AuthorizationsController)
+        prepend_to(Decidim::User, UserExtendedDataGuard)
       end
 
       def include_form(klass)

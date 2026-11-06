@@ -11,7 +11,7 @@ describe Decidim::CustomUserFields do
 
   describe ".decidim_version" do
     it "declares a decidim dependency requirement" do
-      expect(described_class.decidim_version).to include("0.29")
+      expect(described_class.decidim_version).to include("0.32")
     end
   end
 end

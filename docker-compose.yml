@@ -2,7 +2,7 @@ services:
   decidim:
     profiles: ["dev"]
     command: bash -c "sleep infinity"
-    image: octree/decidim-dev:0.29
+    image: octree/decidim-dev:0.32
     entrypoint: ""
     volumes:
       - .:/home/module
@@ -14,7 +14,7 @@ services:
       - DATABASE_USERNAME=decidim
       - DATABASE_PASSWORD=pleaseChangeMe
       - DATABASE_URL=postgresql://decidim:pleaseChangeMe@user-fields-pg:5432/decidim
-      - DECIDIM_VERSION=0.29.4
+      - DECIDIM_VERSION=0.32
       - DEV_MODULE=decidim-user_fields
       - RAILS_ENV=development
       - DISABLE_SPRING=1

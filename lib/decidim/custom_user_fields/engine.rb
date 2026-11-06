@@ -15,6 +15,18 @@ module Decidim
         # root to: "custom_user_fields#index"
       end
 
+      # Avoid Zeitwerk::NameError by copying this override from Deface (no longer works after Rails 7.1 because of API changes)
+      initializer "decidim_custom_user_fields.zeitwerk_ignore_overrides",
+                  before: :set_load_path do |app|
+        if Rails.configuration.respond_to?(:autoloader) && Rails.configuration.autoloader != :zeitwerk
+          next
+        end
+
+        overrides_path = Engine.root.join("app/overrides")
+        app.config.eager_load_paths.delete(overrides_path)
+        Rails.autoloaders.each { |autoloader| autoloader.ignore(overrides_path) }
+      end
+
       initializer "decidim_custom_user_fields.registration_additions" do
         config.to_prepare do
           DecidimIntegrations.apply!

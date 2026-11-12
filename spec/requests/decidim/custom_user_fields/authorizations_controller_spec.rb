@@ -37,9 +37,11 @@ describe Decidim::CustomUserFields::AuthorizationsController, :custom_user_field
         merge: false
       )
 
-      get decidim_verifications.first_login_authorizations_path
+      expected_path = decidim.account_path
 
-      expect(response).to redirect_to(decidim.account_path)
+      get decidim_verifications.onboarding_pending_authorizations_path
+
+      expect(response).to redirect_to(expected_path)
     end
   end
 end

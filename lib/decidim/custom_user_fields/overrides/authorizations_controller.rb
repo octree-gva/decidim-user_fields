@@ -3,9 +3,9 @@
 module Decidim
   module CustomUserFields
     module AuthorizationsController
-      def first_login
+      def onboarding_pending
         unless RegistrationFields.prompt_authorization_on_first_login?(current_organization)
-          redirect_to view_context.cta_button_path
+          redirect_to decidim.account_path
           return
         end
 

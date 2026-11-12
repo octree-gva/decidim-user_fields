@@ -217,6 +217,7 @@ generate_dummy_app_if_needed() {
   fi
   echo "==> [3/5] Generating dummy Decidim app (one-time, several minutes)..."
   if ! docker compose --profile dev run --rm decidim bash -c "
+    apt install -y libclang-dev
     export DISABLED_DOCKER_COMPOSE=true &&
 		cd /home/module &&
     bundle install &&
@@ -269,6 +270,7 @@ reset_decidim_database
 echo "==> [5/5] Seeding Decidim org with Zitadel + scenario customizations..."
 
 docker compose --profile dev run --rm decidim bash -c "
+  apt install -y libclang-dev
   cd /home/module/spec/decidim_dummy_app &&
   export DISABLE_SPRING=1 &&
   bundle exec rake decidim_custom_user_fields:dev:seed

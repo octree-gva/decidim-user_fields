@@ -6,7 +6,7 @@ require "decidim/dev/common_rake"
 # Dummy generation boots Rails (`app:template`) before this task can patch files.
 def dummy_shakapacker_yml_source
   core = Gem.loaded_specs["decidim-core"]&.full_gem_path
-  from_core = core && File.join(core, "lib/decidim/webpacker/shakapacker.yml")
+  from_core = core && File.join(core, "lib/decidim/shakapacker/shakapacker.yml")
   return from_core if from_core && File.exist?(from_core)
 
   File.join(Gem.loaded_specs.fetch("shakapacker").full_gem_path, "lib/install/config/shakapacker.yml")

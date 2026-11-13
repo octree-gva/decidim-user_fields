@@ -34,7 +34,7 @@ describe "Custom user fields invitation acceptance", :custom_user_fields_scenari
     check :invitation_user_tos_agreement
     click_on "Save"
 
-    expect(page).to have_content("Your password was set successfully")
+    expect(page).to have_content("Invitation accepted successfully")
     expect(invited.reload.extended_data["association_represent_association"]).to be(true)
   end
 
@@ -56,8 +56,9 @@ describe "Custom user fields invitation acceptance", :custom_user_fields_scenari
     check :invitation_user_tos_agreement
     click_on "Save"
 
-    expect(page).to have_no_content("Your password was set successfully")
+    expect(page).to have_no_content("Invitation accepted successfully")
     expect(page).to have_content("This field is required")
     expect(page).to have_field("invitation_user_association_represent_association")
+    expect(invited.reload.extended_data).to be_blank
   end
 end

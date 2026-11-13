@@ -4,7 +4,7 @@ require "spec_helper"
 
 describe "Custom user fields invitation acceptance", :custom_user_fields_scenarios do
   let!(:organization) { create(:organization) }
-  let!(:private_assembly) { create(:assembly, :published, organization:, private_space: true) }
+  let!(:private_assembly) { create(:assembly, :published, organization:, access_mode: :restricted) }
   let!(:inviter) { create(:user, :admin, :confirmed, organization:) }
 
   before do
@@ -21,7 +21,7 @@ describe "Custom user fields invitation acceptance", :custom_user_fields_scenari
       },
       inviter
     )
-    create(:assembly_private_user, user: invited, privatable_to: private_assembly)
+    create(:member, user: invited, participatory_space: private_assembly, published: true)
 
     visit "/users/invitation/accept?invitation_token=#{invited.raw_invitation_token}"
 
@@ -47,7 +47,7 @@ describe "Custom user fields invitation acceptance", :custom_user_fields_scenari
       },
       inviter
     )
-    create(:assembly_private_user, user: invited, privatable_to: private_assembly)
+    create(:member, user: invited, participatory_space: private_assembly, published: true)
 
     visit "/users/invitation/accept?invitation_token=#{invited.raw_invitation_token}"
 
